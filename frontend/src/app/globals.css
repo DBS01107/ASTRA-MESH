@@ -1,0 +1,165 @@
+@import "tailwindcss";
+
+:root {
+  --neon: #22d3ee;
+  --critical: #ef4444;
+  --bg: #02030a;
+  --glass: rgba(20, 22, 34, 0.75);
+}
+
+body {
+  background-color: var(--bg);
+  color: #eaeaf0;
+  overflow: hidden;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.cyber-grid {
+  background-image: 
+    linear-gradient(to right, rgba(34, 211, 238, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(34, 211, 238, 0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.glass {
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+}
+
+.scanline::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent, rgba(34, 211, 238, 0.05), transparent);
+  animation: scan 4s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes scan {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+.pulse-glow {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(34, 211, 238, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0); }
+}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #05060b;
+  --panel: rgba(20, 22, 34, 0.75);
+  --border: rgba(99, 102, 241, 0.25);
+  --text: #eaeaf0;
+  --muted: #9ca3af;
+  --accent: #6366f1;
+  --neon: #22d3ee;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  background:
+    radial-gradient(800px circle at 20% -10%, rgba(99,102,241,0.25), transparent 40%),
+    radial-gradient(600px circle at 90% 10%, rgba(34,211,238,0.25), transparent 40%),
+    linear-gradient(180deg, #02030a, #05060b);
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui;
+  overflow-x: hidden;
+}
+
+/* GLASS CARD */
+.glass {
+  background: var(--panel);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.02),
+    0 10px 30px rgba(0,0,0,0.6),
+    inset 0 0 30px rgba(99,102,241,0.05);
+}
+
+/* NEON PULSE */
+.pulse {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(99,102,241,0.6); }
+  70% { box-shadow: 0 0 0 20px rgba(99,102,241,0); }
+  100% { box-shadow: 0 0 0 0 rgba(99,102,241,0); }
+}
+
+/* SCAN LINE */
+.scanline::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(34,211,238,0.12),
+    transparent
+  );
+  animation: scan 4s linear infinite;
+}
+
+@keyframes scan {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+.cyber-grid {
+  background-image: 
+    linear-gradient(to right, rgba(34, 211, 238, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(34, 211, 238, 0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+  perspective: 1000px;
+  transform-style: preserve-3d;
+}
+
+.glow-overlay {
+  background: radial-gradient(circle at center, transparent 0%, rgba(5, 6, 11, 0.8) 100%);
+  pointer-events: none;
+}
+/* Corner Brackets for a "Military Tech" look */
+.corner-hud {
+  position: relative;
+}
+.corner-hud::before, .corner-hud::after {
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-color: var(--neon);
+  border-style: solid;
+  opacity: 0.5;
+}
+.corner-hud::before { top: 0; left: 0; border-width: 2px 0 0 2px; }
+.corner-hud::after { bottom: 0; right: 0; border-width: 0 2px 2px 0; }
+
+/* SVG Glow Filter for the Graph Nodes */
+.svg-glow {
+  filter: drop-shadow(0 0 8px var(--neon));
+}
+.cyber-grid {
+  background-image: 
+    linear-gradient(to right, rgba(34, 211, 238, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(34, 211, 238, 0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+  perspective: 1000px;
+  transform-style: preserve-3d;
+}

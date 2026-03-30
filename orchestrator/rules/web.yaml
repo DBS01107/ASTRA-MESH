@@ -1,0 +1,748 @@
+# Rules for triggering scans based on proven capabilities.
+# Only trigger when capability is confirmed, not just on port/service.
+
+- rule_name: "Trigger Nikto on proven web exposure"
+  source_tool: "nmap"
+  triggers:
+    - field: "capability"
+      match_type: "equals"
+      value: "web_exposed"
+  action:
+    tool_to_run: "nikto"
+    target_type: "url_of_finding"
+    technique: "Web Surface Enumeration"
+    impact: "Web Attack Surface Mapping"
+
+- rule_name: "Trigger WPScan on WordPress Sites"
+  source_tool: "whatweb"
+  triggers:
+    - field: "finding_type"
+      match_type: "equals"
+      value: "technology"
+    - field: "finding_value"
+      match_type: "equals"
+      value: "WordPress"
+  action:
+    tool_to_run: "wpscan"
+    target_type: "url_of_finding"
+    technique: "CMS Enumeration"
+    impact: "WordPress Vulnerability Discovery"
+
+- rule_name: "Trigger JoomScan on Joomla Sites"
+  source_tool: "whatweb"
+  triggers:
+    - field: "finding_type"
+      match_type: "equals"
+      value: "technology"
+    - field: "finding_value"
+      match_type: "equals"
+      value: "Joomla"
+  action:
+    tool_to_run: "joomscan" # You would add this tool to registry.py
+    target_type: "url_of_finding"
+
+# rules/web.yaml
+
+- id: http_service_detected
+  description: HTTP service exposed indicating web attack surface
+  when:
+    finding_type: open_port
+    service: http
+  then:
+    finding_id: WEB_SERVICE
+    technique: Web Surface Enumeration
+    impact: Identification of Web-Based Attack Vectors
+
+- id: https_service_detected
+  description: HTTPS service exposed indicating encrypted web surface
+  when:
+    finding_type: open_port
+    service: https
+  then:
+    finding_id: HTTPS_SERVICE
+    technique: Secure Web Surface Enumeration
+    impact: Targeted TLS and Application Attacks
+
+- id: server_version_disclosure
+  description: Web server discloses detailed version information
+  when:
+    finding_type: banner_disclosure
+    service: http
+  then:
+    finding_id: SERVER_VERSION_LEAK
+    technique: Vulnerability Fingerprinting
+    impact: Mapping to Known Web CVEs
+
+- id: outdated_web_server
+  description: Web server version is known to be outdated
+  when:
+    finding_type: version_detected
+    service: http
+    severity: high
+  then:
+    finding_id: OUTDATED_WEB_SERVER
+    technique: Known Exploit Reuse
+    impact: Remote Code Execution
+
+- id: directory_listing_enabled
+  description: Directory listing enabled on web server
+  when:
+    finding_type: misconfiguration
+    contains: directory listing
+  then:
+    finding_id: DIRECTORY_LISTING
+    technique: File and Resource Discovery
+    impact: Sensitive File Disclosure
+
+- id: backup_files_exposed
+  description: Backup or temporary files accessible over web
+  when:
+    finding_type: exposed_file
+    contains: backup
+  then:
+    finding_id: BACKUP_FILES
+    technique: Source and Config Disclosure
+    impact: Credential and Logic Exposure
+
+- id: git_directory_exposed
+  description: Exposed .git directory detected
+  when:
+    finding_type: exposed_file
+    contains: .git
+  then:
+    finding_id: GIT_EXPOSED
+    technique: Source Code Retrieval
+    impact: Full Application Logic Disclosure
+
+- id: cms_detected
+  description: Content Management System detected
+  when:
+    finding_type: cms_detection
+  then:
+    finding_id: CMS_PRESENT
+    technique: Platform-Specific Reconnaissance
+    impact: Narrowed Exploit Search Space
+
+- id: cms_outdated
+  description: CMS version detected is outdated
+  when:
+    finding_type: cms_detection
+    severity: high
+  then:
+    finding_id: OUTDATED_CMS
+    technique: Known CMS Exploit Abuse
+    impact: Web Application Takeover
+
+- id: admin_panel_exposed
+  description: Administrative or management endpoint exposed
+  when:
+    finding_type: exposed_endpoint
+    contains: admin
+  then:
+    finding_id: ADMIN_PANEL
+    technique: Privileged Interface Targeting
+    impact: Administrative Account Compromise
+
+- id: weak_http_methods
+  description: Dangerous HTTP methods enabled (PUT, DELETE, TRACE)
+  when:
+    finding_type: http_method
+    severity: medium
+  then:
+    finding_id: WEAK_HTTP_METHODS
+    technique: Unauthorized Resource Manipulation
+    impact: File Upload or Data Tampering
+
+- id: insecure_cookies
+  description: Session cookies missing secure attributes
+  when:
+    finding_type: cookie_issue
+    severity: medium
+  then:
+    finding_id: INSECURE_COOKIES
+    technique: Session Hijacking
+    impact: Authenticated User Impersonation
+
+- id: xss_detected
+  description: Cross-site scripting vulnerability identified
+  when:
+    finding_type: xss
+    severity: medium
+  then:
+    finding_id: XSS
+    technique: Client-Side Script Injection
+    impact: Session Theft or Credential Capture
+
+- id: csrf_protection_missing
+  description: CSRF protection absent on sensitive actions
+  when:
+    finding_type: csrf
+    severity: medium
+  then:
+    finding_id: CSRF_MISSING
+    technique: Cross-Site Request Forgery
+    impact: Unauthorized State-Changing Actions
+
+- id: file_upload_endpoint
+  description: File upload functionality detected
+  when:
+    finding_type: functionality
+    contains: upload
+  then:
+    finding_id: FILE_UPLOAD
+    technique: Malicious File Upload
+    impact: Web Shell Deployment
+
+- id: web_framework_identified
+  description: Web application framework identified
+  when:
+    finding_type: framework_detection
+  then:
+    finding_id: WEB_FRAMEWORK
+    technique: Framework-Specific Exploitation
+    impact: Targeted Vulnerability Chaining
+
+- id: waf_detected
+  description: Web Application Firewall detected
+  when:
+    finding_type: waf_detection
+  then:
+    finding_id: WAF_PRESENT
+    technique: Defense Evasion Planning
+    impact: Adjusted Payload and Attack Strategy
+
+- id: missing_security_headers
+  description: Common HTTP security headers missing
+  when:
+    finding_type: security_header
+    severity: low
+  then:
+    finding_id: MISSING_HEADERS
+    technique: Client-Side Attack Surface Expansion
+    impact: Increased XSS and Clickjacking Risk
+
+- id: open_api_endpoint
+  description: API endpoint exposed without authentication
+  when:
+    finding_type: api_exposed
+    severity: high
+  then:
+    finding_id: OPEN_API
+    technique: Direct API Abuse
+    impact: Business Logic or Data Compromise
+
+# rules/web.yaml (continued – real-world exploit chaining & overlooked web paths)
+
+- id: path_traversal_detected
+  description: Path traversal indicators found in web responses
+  when:
+    finding_type: traversal
+    severity: high
+  then:
+    finding_id: PATH_TRAVERSAL
+    technique: Arbitrary File Read
+    impact: Sensitive System File Disclosure
+
+- id: lfi_detected
+  description: Local File Inclusion vulnerability identified
+  when:
+    finding_type: lfi
+    severity: high
+  then:
+    finding_id: LFI
+    technique: Local File Inclusion
+    impact: Credential Disclosure or Code Execution
+
+- id: rfi_detected
+  description: Remote File Inclusion vulnerability identified
+  when:
+    finding_type: rfi
+    severity: high
+  then:
+    finding_id: RFI
+    technique: Remote Code Injection
+    impact: Full Web Server Compromise
+
+- id: open_redirect
+  description: Open redirect vulnerability detected
+  when:
+    finding_type: open_redirect
+    severity: low
+  then:
+    finding_id: OPEN_REDIRECT
+    technique: Social Engineering Facilitation
+    impact: Phishing and Token Theft
+
+- id: clickjacking_possible
+  description: Clickjacking protection missing
+  when:
+    finding_type: security_header
+    contains: x-frame-options missing
+  then:
+    finding_id: CLICKJACKING
+    technique: UI Redressing
+    impact: User Action Hijacking
+
+- id: idor_detected
+  description: Insecure Direct Object Reference detected
+  when:
+    finding_type: idor
+    severity: high
+  then:
+    finding_id: IDOR
+    technique: Authorization Bypass
+    impact: Unauthorized Data Access
+
+- id: auth_bypass_logic
+  description: Authentication bypass via logic flaw
+  when:
+    finding_type: auth_bypass
+    severity: high
+  then:
+    finding_id: AUTH_BYPASS
+    technique: Authentication Logic Abuse
+    impact: Unauthorized Account Access
+
+- id: ssti_detected
+  description: Server-Side Template Injection identified
+  when:
+    finding_type: ssti
+    severity: high
+  then:
+    finding_id: SSTI
+    technique: Template Injection
+    impact: Remote Code Execution
+
+- id: command_injection_detected
+  description: OS command injection vulnerability detected
+  when:
+    finding_type: command_injection
+    severity: high
+  then:
+    finding_id: CMD_INJECTION
+    technique: Arbitrary Command Execution
+    impact: System-Level Code Execution
+
+- id: deserialization_issue
+  description: Insecure deserialization behavior detected
+  when:
+    finding_type: deserialization
+    severity: high
+  then:
+    finding_id: INSECURE_DESERIALIZATION
+    technique: Object Injection
+    impact: Remote Code Execution
+
+- id: graphql_introspection_enabled
+  description: GraphQL introspection enabled in production
+  when:
+    finding_type: graphql_config
+    contains: introspection
+  then:
+    finding_id: GRAPHQL_INTROSPECTION
+    technique: API Schema Enumeration
+    impact: Discovery of Hidden Queries and Mutations
+
+- id: graphql_unauth_query
+  description: GraphQL queries executable without authentication
+  when:
+    finding_type: graphql_auth
+    contains: unauthenticated
+  then:
+    finding_id: GRAPHQL_NO_AUTH
+    technique: API Abuse
+    impact: Unauthorized Data Access
+
+- id: debug_mode_enabled
+  description: Application running in debug or verbose error mode
+  when:
+    finding_type: debug_mode
+    severity: medium
+  then:
+    finding_id: DEBUG_MODE
+    technique: Information Disclosure
+    impact: Stack Traces, Secrets, and Paths Exposure
+
+- id: stack_trace_exposed
+  description: Application stack traces exposed to users
+  when:
+    finding_type: error_handling
+    contains: stack trace
+  then:
+    finding_id: STACK_TRACE
+    technique: Internal Logic Discovery
+    impact: Accelerated Exploit Development
+
+- id: third_party_js_risk
+  description: Risky or outdated third-party JavaScript detected
+  when:
+    finding_type: third_party_component
+    severity: medium
+  then:
+    finding_id: THIRD_PARTY_JS
+    technique: Supply Chain Exploitation
+    impact: Client-Side Compromise
+
+- id: oauth_misconfiguration
+  description: OAuth implementation misconfiguration detected
+  when:
+    finding_type: oauth_issue
+    severity: high
+  then:
+    finding_id: OAUTH_MISCONFIG
+    technique: Token Theft or Account Takeover
+    impact: Cross-Account Access
+
+- id: password_reset_weakness
+  description: Password reset mechanism is predictable or weak
+  when:
+    finding_type: password_reset
+    severity: high
+  then:
+    finding_id: WEAK_PASSWORD_RESET
+    technique: Account Recovery Abuse
+    impact: Account Takeover
+# rules/web.yaml (continued – cloud, modern stacks, and breach accelerators)
+
+- id: exposed_cloud_metadata
+  description: Cloud instance metadata endpoint accessible from application
+  when:
+    finding_type: cloud_metadata
+    severity: high
+  then:
+    finding_id: CLOUD_METADATA
+    technique: Cloud Credential Harvesting
+    impact: Cloud Account and Service Takeover
+
+- id: s3_bucket_public
+  description: Publicly accessible cloud storage bucket detected
+  when:
+    finding_type: cloud_storage
+    contains: public
+  then:
+    finding_id: PUBLIC_BUCKET
+    technique: Unauthenticated Data Access
+    impact: Sensitive Data Exfiltration
+
+- id: signed_url_leak
+  description: Signed URLs or temporary access tokens exposed
+  when:
+    finding_type: token_exposure
+    severity: medium
+  then:
+    finding_id: SIGNED_URL
+    technique: Temporary Credential Abuse
+    impact: Unauthorized Resource Access
+
+- id: subdomain_takeover_possible
+  description: Dangling DNS record points to unclaimed service
+  when:
+    finding_type: subdomain_issue
+    contains: unclaimed
+  then:
+    finding_id: SUBDOMAIN_TAKEOVER
+    technique: Subdomain Takeover
+    impact: Full Control of Trusted Domain
+
+- id: cors_misconfiguration
+  description: Overly permissive CORS configuration detected
+  when:
+    finding_type: cors
+    severity: high
+  then:
+    finding_id: CORS_MISCONFIG
+    technique: Cross-Origin Data Theft
+    impact: Authenticated Data Exposure
+
+- id: host_header_injection
+  description: Host header manipulation affects application behavior
+  when:
+    finding_type: host_header
+    severity: medium
+  then:
+    finding_id: HOST_HEADER_INJECTION
+    technique: Request Routing Manipulation
+    impact: Cache Poisoning or Password Reset Abuse
+
+- id: cache_poisoning_possible
+  description: Web cache poisoning indicators detected
+  when:
+    finding_type: cache_issue
+    severity: medium
+  then:
+    finding_id: CACHE_POISONING
+    technique: Web Cache Deception
+    impact: Persistent Malicious Content Delivery
+
+- id: http_request_smuggling
+  description: HTTP request smuggling behavior detected
+  when:
+    finding_type: request_smuggling
+    severity: high
+  then:
+    finding_id: REQUEST_SMUGGLING
+    technique: HTTP Desynchronization
+    impact: Bypass of Security Controls and WAF
+
+- id: insecure_file_download
+  description: File download endpoint lacks authorization checks
+  when:
+    finding_type: file_download
+    severity: high
+  then:
+    finding_id: INSECURE_DOWNLOAD
+    technique: Authorization Bypass
+    impact: Confidential File Disclosure
+
+- id: web_socket_no_auth
+  description: WebSocket endpoint accessible without authentication
+  when:
+    finding_type: websocket
+    contains: no auth
+  then:
+    finding_id: WEBSOCKET_NO_AUTH
+    technique: Persistent Connection Abuse
+    impact: Real-Time Data Interception
+
+- id: rate_limit_missing_api
+  description: API endpoints lack rate limiting
+  when:
+    finding_type: rate_limit
+    service: api
+  then:
+    finding_id: API_NO_RATE_LIMIT
+    technique: Automated Abuse
+    impact: Brute Force, Enumeration, or DoS
+
+- id: mass_assignment
+  description: Mass assignment vulnerability detected
+  when:
+    finding_type: mass_assignment
+    severity: high
+  then:
+    finding_id: MASS_ASSIGNMENT
+    technique: Parameter Tampering
+    impact: Privilege Escalation or Role Manipulation
+
+- id: hidden_parameters_discovered
+  description: Undocumented or hidden parameters discovered
+  when:
+    finding_type: hidden_parameter
+    severity: medium
+  then:
+    finding_id: HIDDEN_PARAMS
+    technique: Business Logic Discovery
+    impact: Unauthorized Feature Abuse
+
+- id: weak_jwt_configuration
+  description: Weak JWT signing or validation detected
+  when:
+    finding_type: jwt_issue
+    severity: high
+  then:
+    finding_id: WEAK_JWT
+    technique: Token Forgery
+    impact: Authentication Bypass
+
+- id: file_extension_bypass
+  description: File extension filtering bypass identified
+  when:
+    finding_type: upload_bypass
+    severity: high
+  then:
+    finding_id: EXTENSION_BYPASS
+    technique: Malicious File Upload
+    impact: Web Shell Deployment
+
+- id: sensitive_js_endpoints
+  description: JavaScript files expose internal API endpoints
+  when:
+    finding_type: js_analysis
+    severity: medium
+  then:
+    finding_id: JS_ENDPOINT_LEAK
+    technique: Client-Side Reconnaissance
+    impact: Discovery of Hidden APIs
+
+# rules/web.yaml (final section – exploitation finishers & kill-chain closers)
+
+- id: session_fixation
+  description: Application accepts attacker-controlled session identifiers
+  when:
+    finding_type: session_management
+    contains: fixation
+  then:
+    finding_id: SESSION_FIXATION
+    technique: Session Fixation
+    impact: Authenticated Session Hijack
+
+- id: broken_logout
+  description: Logout does not invalidate server-side session
+  when:
+    finding_type: session_management
+    contains: logout ineffective
+  then:
+    finding_id: BROKEN_LOGOUT
+    technique: Session Reuse
+    impact: Persistent Account Access
+
+- id: predictable_object_ids
+  description: Object identifiers are sequential or guessable
+  when:
+    finding_type: id_scheme
+    severity: medium
+  then:
+    finding_id: PREDICTABLE_IDS
+    technique: Forced Browsing
+    impact: Bulk Unauthorized Data Access
+
+- id: weak_captcha
+  description: CAPTCHA is missing or trivially bypassable
+  when:
+    finding_type: anti_automation
+    severity: low
+  then:
+    finding_id: WEAK_CAPTCHA
+    technique: Automation Evasion
+    impact: Scalable Credential and Enumeration Attacks
+
+- id: exposed_actuator
+  description: Spring Boot actuator endpoints exposed
+  when:
+    finding_type: exposed_endpoint
+    contains: actuator
+  then:
+    finding_id: ACTUATOR_EXPOSED
+    technique: Management Endpoint Abuse
+    impact: Configuration and Environment Disclosure
+
+- id: jmx_console_exposed
+  description: JMX console exposed over web
+  when:
+    finding_type: exposed_endpoint
+    contains: jmx
+  then:
+    finding_id: JMX_EXPOSED
+    technique: Java Management Abuse
+    impact: Remote Code Execution
+
+- id: phpinfo_exposed
+  description: phpinfo page accessible
+  when:
+    finding_type: exposed_endpoint
+    contains: phpinfo
+  then:
+    finding_id: PHPINFO
+    technique: Environment Enumeration
+    impact: Secret and Path Disclosure
+
+- id: rails_secret_key_leak
+  description: Rails secret_key_base disclosed
+  when:
+    finding_type: secret_exposure
+    contains: secret_key_base
+  then:
+    finding_id: RAILS_SECRET
+    technique: Cookie Forgery
+    impact: Authentication Bypass
+
+- id: laravel_app_key_leak
+  description: Laravel APP_KEY exposed
+  when:
+    finding_type: secret_exposure
+    contains: APP_KEY
+  then:
+    finding_id: LARAVEL_KEY
+    technique: Encrypted Payload Forgery
+    impact: Remote Code Execution
+
+- id: node_env_exposed
+  description: Node.js environment variables exposed
+  when:
+    finding_type: env_exposure
+    severity: high
+  then:
+    finding_id: NODE_ENV
+    technique: Secret Harvesting
+    impact: Token and Credential Compromise
+
+- id: jwt_kid_injection
+  description: JWT header kid parameter is injectable
+  when:
+    finding_type: jwt_issue
+    contains: kid
+  then:
+    finding_id: JWT_KID
+    technique: JWT Header Injection
+    impact: Authentication Bypass
+
+- id: oauth_redirect_uri_wildcard
+  description: OAuth redirect_uri allows wildcards
+  when:
+    finding_type: oauth_issue
+    contains: wildcard
+  then:
+    finding_id: OAUTH_REDIRECT_WILDCARD
+    technique: OAuth Token Interception
+    impact: Account Takeover
+
+- id: api_versioning_flaw
+  description: Older API versions exposed with weaker controls
+  when:
+    finding_type: api_versioning
+    severity: medium
+  then:
+    finding_id: API_OLD_VERSION
+    technique: Legacy Endpoint Abuse
+    impact: Authorization Bypass
+
+- id: feature_flag_exposed
+  description: Feature flag service exposed client-side
+  when:
+    finding_type: feature_flag
+    severity: medium
+  then:
+    finding_id: FEATURE_FLAGS
+    technique: Feature Manipulation
+    impact: Access to Restricted Functionality
+
+- id: webhook_no_auth
+  description: Webhook endpoint accepts unauthenticated requests
+  when:
+    finding_type: webhook
+    contains: no auth
+  then:
+    finding_id: WEBHOOK_NO_AUTH
+    technique: Event Injection
+    impact: Unauthorized Actions and Data Poisoning
+
+- id: ssrf_internal_access
+  description: SSRF allows access to internal services
+  when:
+    finding_type: ssrf
+    contains: internal
+  then:
+    finding_id: SSRF_INTERNAL
+    technique: Server-Side Request Forgery
+    impact: Internal Network Pivot and Credential Theft
+
+- id: csp_unsafe
+  description: Content Security Policy allows unsafe directives
+  when:
+    finding_type: csp_issue
+    contains: unsafe
+  then:
+    finding_id: CSP_UNSAFE
+    technique: Script Injection Facilitation
+    impact: Elevated XSS Reliability
+
+- id: stale_dns_web
+  description: Web asset points to stale or decommissioned DNS target
+  when:
+    finding_type: dns_issue
+    severity: medium
+  then:
+    finding_id: STALE_DNS_WEB
+    technique: Domain Hijacking
+    impact: Traffic Interception and Brand Abuse
+

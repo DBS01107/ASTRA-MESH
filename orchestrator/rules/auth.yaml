@@ -1,0 +1,303 @@
+# rules/auth.yaml
+
+- id: login_endpoint_detected
+  description: Authentication endpoint exposed
+  when:
+    finding_type: login_endpoint
+  then:
+    finding_id: LOGIN_ENDPOINT
+    technique: Authentication Surface Mapping
+    impact: Targeted Credential Attacks
+
+- id: default_credentials_valid
+  description: Service accepts known default credentials
+  when:
+    finding_type: default_creds
+    severity: high
+  then:
+    finding_id: DEFAULT_CREDS_VALID
+    technique: Authentication Bypass
+    impact: Immediate Unauthorized Access
+
+- id: weak_password_policy
+  description: Password policy lacks complexity or length requirements
+  when:
+    finding_type: password_policy
+    severity: low
+  then:
+    finding_id: WEAK_PASSWORD_POLICY
+    technique: Password Guessing
+    impact: Increased Account Compromise Likelihood
+
+- id: no_mfa_enforced
+  description: Multi-factor authentication not enforced
+  when:
+    finding_type: mfa_status
+    contains: disabled
+  then:
+    finding_id: MFA_DISABLED
+    technique: Credential Stuffing
+    impact: Account Takeover at Scale
+
+- id: rate_limiting_absent
+  description: Authentication endpoint lacks rate limiting
+  when:
+    finding_type: rate_limit
+    service: auth
+  then:
+    finding_id: NO_RATE_LIMIT_AUTH
+    technique: Automated Brute Force
+    impact: High-Volume Credential Attacks
+
+- id: account_lockout_missing
+  description: No account lockout after failed attempts
+  when:
+    finding_type: lockout_policy
+    severity: medium
+  then:
+    finding_id: NO_LOCKOUT
+    technique: Sustained Brute Force
+    impact: Eventual Account Compromise
+
+- id: username_enumeration
+  description: Authentication responses differ for valid users
+  when:
+    finding_type: user_enum
+    severity: medium
+  then:
+    finding_id: USER_ENUM
+    technique: Account Enumeration
+    impact: Precision Credential Attacks
+
+- id: password_reset_enum
+  description: Password reset reveals valid account existence
+  when:
+    finding_type: password_reset
+    contains: user exists
+  then:
+    finding_id: RESET_ENUM
+    technique: Account Enumeration
+    impact: Expanded Attack Target List
+
+- id: predictable_reset_token
+  description: Password reset tokens are predictable or reusable
+  when:
+    finding_type: reset_token
+    severity: high
+  then:
+    finding_id: WEAK_RESET_TOKEN
+    technique: Account Recovery Abuse
+    impact: Full Account Takeover
+
+- id: oauth_token_leak
+  description: OAuth access or refresh tokens exposed
+  when:
+    finding_type: token_exposure
+    service: oauth
+  then:
+    finding_id: OAUTH_TOKEN_LEAK
+    technique: Token Replay
+    impact: Cross-Service Account Access
+
+- id: jwt_none_algorithm
+  description: JWT accepts none or weak signing algorithm
+  when:
+    finding_type: jwt_issue
+    contains: none
+  then:
+    finding_id: JWT_NONE
+    technique: Token Forgery
+    impact: Authentication Bypass
+
+- id: session_timeout_excessive
+  description: Sessions remain valid for excessive duration
+  when:
+    finding_type: session_policy
+    severity: low
+  then:
+    finding_id: LONG_SESSION
+    technique: Session Reuse
+    impact: Persistent Unauthorized Access
+
+- id: concurrent_sessions_unlimited
+  description: Unlimited concurrent sessions allowed per user
+  when:
+    finding_type: session_policy
+    contains: unlimited
+  then:
+    finding_id: UNLIMITED_SESSIONS
+    technique: Session Abuse
+    impact: Stealthy Persistent Access
+
+- id: sso_trust_misconfig
+  description: SSO trust relationship misconfigured
+  when:
+    finding_type: sso_issue
+    severity: high
+  then:
+    finding_id: SSO_TRUST
+    technique: Identity Federation Abuse
+    impact: Cross-Domain Account Compromise
+
+- id: kerberos_preauth_disabled
+  description: Kerberos pre-authentication disabled
+  when:
+    finding_type: kerberos_config
+    contains: preauth disabled
+  then:
+    finding_id: KERBEROS_NO_PREAUTH
+    technique: AS-REP Roasting
+    impact: Offline Password Cracking
+
+# rules/auth.yaml (continued – chaining, federation, and real-world auth bypass paths)
+
+- id: magic_link_reuse
+  description: Magic link or passwordless login links are reusable
+  when:
+    finding_type: magic_link
+    contains: reusable
+  then:
+    finding_id: MAGIC_LINK_REUSE
+    technique: Token Replay
+    impact: Account Takeover Without Password
+
+- id: magic_link_long_ttl
+  description: Magic link tokens have excessive validity
+  when:
+    finding_type: magic_link
+    severity: low
+  then:
+    finding_id: MAGIC_LINK_LONG_TTL
+    technique: Delayed Token Abuse
+    impact: Extended Window for Account Compromise
+
+- id: otp_bruteforce_possible
+  description: One-time password can be brute-forced
+  when:
+    finding_type: otp_policy
+    contains: no rate limit
+  then:
+    finding_id: OTP_BRUTEFORCE
+    technique: OTP Guessing
+    impact: MFA Bypass
+
+- id: otp_reuse_allowed
+  description: OTP can be reused or not invalidated
+  when:
+    finding_type: otp_policy
+    contains: reuse
+  then:
+    finding_id: OTP_REUSE
+    technique: Authentication Replay
+    impact: Repeated Unauthorized Access
+
+- id: mfa_enrollment_unprotected
+  description: MFA enrollment endpoint lacks authentication
+  when:
+    finding_type: mfa_enrollment
+    severity: high
+  then:
+    finding_id: MFA_ENROLL_BYPASS
+    technique: MFA Enrollment Abuse
+    impact: Attacker-Controlled MFA Binding
+
+- id: remember_me_token_weak
+  description: Remember-me tokens are predictable or long-lived
+  when:
+    finding_type: remember_me
+    severity: medium
+  then:
+    finding_id: REMEMBER_ME_WEAK
+    technique: Persistent Token Theft
+    impact: Long-Term Account Access
+
+- id: password_change_no_reauth
+  description: Password change does not require current password
+  when:
+    finding_type: password_change
+    contains: no reauth
+  then:
+    finding_id: PASSWORD_CHANGE_BYPASS
+    technique: Session Abuse
+    impact: Account Lock-In by Attacker
+
+- id: email_change_no_verification
+  description: Email change occurs without verification
+  when:
+    finding_type: profile_update
+    contains: email no verify
+  then:
+    finding_id: EMAIL_CHANGE_BYPASS
+    technique: Account Ownership Takeover
+    impact: Recovery Channel Hijack
+
+- id: device_trust_bypass
+  description: Trusted device checks can be bypassed
+  when:
+    finding_type: device_trust
+    severity: medium
+  then:
+    finding_id: DEVICE_TRUST_BYPASS
+    technique: Trust Mechanism Abuse
+    impact: MFA and Location Controls Bypassed
+
+- id: auth_token_in_url
+  description: Authentication tokens transmitted via URL
+  when:
+    finding_type: token_exposure
+    contains: url
+  then:
+    finding_id: TOKEN_IN_URL
+    technique: Token Leakage via Referrer
+    impact: Session and Account Compromise
+
+- id: sso_assertion_not_signed
+  description: SSO assertions are unsigned or weakly signed
+  when:
+    finding_type: sso_issue
+    contains: unsigned
+  then:
+    finding_id: SSO_UNSIGNED_ASSERTION
+    technique: Assertion Forgery
+    impact: Cross-User Impersonation
+
+- id: saml_replay_possible
+  description: SAML assertions are reusable
+  when:
+    finding_type: saml_issue
+    contains: replay
+  then:
+    finding_id: SAML_REPLAY
+    technique: Assertion Replay
+    impact: Unauthorized SSO Access
+
+- id: openid_issuer_confusion
+  description: OpenID issuer validation missing
+  when:
+    finding_type: oidc_issue
+    severity: high
+  then:
+    finding_id: OIDC_ISSUER_CONFUSION
+    technique: Identity Provider Confusion
+    impact: Authentication Bypass
+
+- id: password_history_not_enforced
+  description: Password reuse is allowed
+  when:
+    finding_type: password_policy
+    contains: reuse allowed
+  then:
+    finding_id: PASSWORD_REUSE
+    technique: Credential Reuse
+    impact: Faster Account Recompromise
+
+- id: auth_error_detail_leak
+  description: Detailed authentication error messages exposed
+  when:
+    finding_type: auth_error
+    severity: low
+  then:
+    finding_id: AUTH_ERROR_LEAK
+    technique: Signal-Based Enumeration
+    impact: Improved Attack Precision
+

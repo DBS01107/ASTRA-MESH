@@ -1,0 +1,16 @@
+[
+  {
+    "service": "http",
+    "version_regex": "",
+    "cve": "CVE-XXXX-0001",
+    "cvss": 7.5,
+    "desc": "Example HTTP server vulnerability allowing directory traversal"
+  },
+  {
+    "service": "ssh",
+    "version_regex": "OpenSSH_7\\.[0-9]",
+    "cve": "CVE-2016-10009",
+    "cvss": 9.8,
+    "desc": "Old OpenSSH version vulnerable to user enumeration"
+  }
+]

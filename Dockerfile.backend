@@ -1,0 +1,62 @@
+FROM kalilinux/kali-rolling
+
+# Avoid interactive prompts during apt installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Update and install system dependencies (Security Tools)
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    python3-venv \
+    nmap \
+    whatweb \
+    nuclei \
+    nikto \
+    wpscan \
+    sqlmap \
+    enum4linux \
+    exploitdb \
+    wfuzz \
+    git \
+    curl \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
+
+# Validate Nikto and SearchSploit at build-time so runtime scans do not depend on on-demand installation.
+RUN command -v nikto && command -v searchsploit
+
+# Install JoomScan manually
+RUN git clone https://github.com/OWASP/joomscan.git /opt/joomscan && \
+    ln -s /opt/joomscan/joomscan.pl /usr/local/bin/joomscan
+
+# Set up Python Environment
+WORKDIR /app
+
+# Create and activate virtual environment
+# This prevents conflicts with Kali's system Python packages
+ENV VIRTUAL_ENV=/opt/venv
+RUN python3 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+# Copy requirements
+COPY requirements.txt .
+
+# Install Python dependencies in stages to avoid segfaults
+# First install build dependencies and lightweight packages
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+
+# Install numpy and other heavy C-extension packages separately with limited parallelism
+RUN pip install --no-cache-dir "numpy>=1.24.0,<2.3"
+
+# Install remaining dependencies
+RUN pip install --no-cache-dir -r requirements.txt || \
+    (pip install --no-cache-dir --no-build-isolation -r requirements.txt)
+
+# Copy Codebase
+COPY . .
+
+# Expose Port
+EXPOSE 8000
+
+# Run Server
+CMD ["python", "orchestrator/server.py"]

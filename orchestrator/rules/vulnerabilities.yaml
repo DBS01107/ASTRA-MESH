@@ -1,0 +1,32 @@
+# Rules that trigger based on specific vulnerabilities being found.
+# Assumes 'vulners' or 'nuclei' parsers creating 'vulnerability' findings.
+
+- rule_name: "Trigger SQLMap on High-Confidence SQLi"
+  source_tool: "nuclei"
+  triggers:
+    - field: "finding_type"
+      match_type: "equals"
+      value: "vulnerability"
+    - field: "details.tags" # Assumes parser extracts Nuclei tags
+      match_type: "contains"
+      value: "sqli"
+    - field: "details.severity"
+      match_type: "equals"
+      value: "high"
+  action:
+    tool_to_run: "sqlmap"
+    target_type: "url_of_finding"
+
+- rule_name: "Run SearchSploit for Confirmed CVEs"
+  source_tool: "vulners"
+  triggers:
+    - field: "finding_type"
+      match_type: "equals"
+      value: "vulnerability"
+    - field: "finding_value" # Assumes parser puts the CVE-ID here
+      match_type: "contains"
+      value: "CVE-"
+  action:
+    tool_to_run: "searchsploit"
+    target_type: "cve_of_finding" # A new target type the engine could handle
+

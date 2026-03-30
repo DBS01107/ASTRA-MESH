@@ -1,0 +1,580 @@
+# rules/database.yaml
+
+- id: database_port_exposed
+  description: Database service port exposed to untrusted network
+  when:
+    finding_type: open_port
+    severity: high
+  then:
+    finding_id: DB_PORT_EXPOSED
+    technique: Direct Database Targeting
+    impact: Bypass of Application-Layer Controls
+
+- id: mysql_exposed_no_tls
+  description: MySQL service exposed without enforced TLS
+  when:
+    finding_type: crypto_weakness
+    service: mysql
+  then:
+    finding_id: MYSQL_NO_TLS
+    technique: Credential Sniffing
+    impact: Database Credential Compromise
+
+- id: mysql_weak_auth
+  description: MySQL uses weak or legacy authentication plugin
+  when:
+    finding_type: db_auth
+    service: mysql
+    contains: mysql_old_password
+  then:
+    finding_id: MYSQL_WEAK_AUTH
+    technique: Authentication Downgrade
+    impact: Offline Password Cracking
+
+- id: postgres_trust_auth
+  description: PostgreSQL configured with trust authentication
+  when:
+    finding_type: db_auth
+    service: postgresql
+    contains: trust
+  then:
+    finding_id: POSTGRES_TRUST
+    technique: Authentication Bypass
+    impact: Unrestricted Database Access
+
+- id: mssql_exposed
+  description: Microsoft SQL Server exposed externally
+  when:
+    finding_type: open_port
+    service: mssql
+    port: 1433
+  then:
+    finding_id: MSSQL_EXPOSED
+    technique: Credential Brute Force
+    impact: Database-Level Access
+
+- id: mssql_xp_cmdshell_enabled
+  description: xp_cmdshell enabled on SQL Server
+  when:
+    finding_type: db_feature
+    service: mssql
+    contains: xp_cmdshell
+  then:
+    finding_id: MSSQL_CMD_SHELL
+    technique: Command Execution via Database
+    impact: Operating System Command Execution
+
+- id: oracle_listener_exposed
+  description: Oracle TNS listener exposed
+  when:
+    finding_type: open_port
+    service: oracle
+    port: 1521
+  then:
+    finding_id: ORACLE_LISTENER
+    technique: Listener Abuse
+    impact: SID Enumeration and Unauthorized Access
+
+- id: oracle_default_accounts
+  description: Oracle default accounts enabled
+  when:
+    finding_type: default_creds
+    service: oracle
+  then:
+    finding_id: ORACLE_DEFAULT_CREDS
+    technique: Default Credential Abuse
+    impact: DBA-Level Access
+
+- id: mongodb_no_auth
+  description: MongoDB accessible without authentication
+  when:
+    finding_type: auth_policy
+    service: mongodb
+    contains: no auth
+  then:
+    finding_id: MONGO_NO_AUTH
+    technique: Unauthenticated Database Access
+    impact: Full Database Compromise
+
+- id: mongodb_bind_all
+  description: MongoDB bound to all network interfaces
+  when:
+    finding_type: db_config
+    service: mongodb
+    contains: 0.0.0.0
+  then:
+    finding_id: MONGO_BIND_ALL
+    technique: Expanded Attack Surface
+    impact: Remote Unauthorized Access
+
+- id: redis_exposed_no_auth
+  description: Redis exposed without authentication
+  when:
+    finding_type: auth_policy
+    service: redis
+    contains: no auth
+  then:
+    finding_id: REDIS_NO_AUTH
+    technique: In-Memory Datastore Abuse
+    impact: Remote Code Execution via Config Injection
+
+- id: redis_writeable_dir
+  description: Redis allows writing to filesystem
+  when:
+    finding_type: db_feature
+    service: redis
+    contains: dir writable
+  then:
+    finding_id: REDIS_FS_WRITE
+    technique: Arbitrary File Write
+    impact: Web Shell or SSH Key Injection
+
+- id: elasticsearch_no_auth
+  description: Elasticsearch accessible without authentication
+  when:
+    finding_type: auth_policy
+    service: elasticsearch
+    contains: no auth
+  then:
+    finding_id: ELASTIC_NO_AUTH
+    technique: Index Enumeration and Dump
+    impact: Sensitive Data Exfiltration
+
+- id: elasticsearch_scripting_enabled
+  description: Elasticsearch dynamic scripting enabled
+  when:
+    finding_type: db_feature
+    service: elasticsearch
+    contains: scripting
+  then:
+    finding_id: ELASTIC_SCRIPTING
+    technique: Script Injection
+    impact: Remote Code Execution
+
+- id: cassandra_exposed
+  description: Cassandra database exposed externally
+  when:
+    finding_type: open_port
+    service: cassandra
+  then:
+    finding_id: CASSANDRA_EXPOSED
+    technique: Unauthorized Database Access
+    impact: Full Keyspace Disclosure
+
+- id: cassandra_default_creds
+  description: Cassandra default credentials enabled
+  when:
+    finding_type: default_creds
+    service: cassandra
+  then:
+    finding_id: CASSANDRA_DEFAULT_CREDS
+    technique: Default Credential Abuse
+    impact: Administrative Database Access
+
+- id: sql_injection_indicator
+  description: Indicators of SQL injection in application traffic
+  when:
+    finding_type: sqli
+    severity: high
+  then:
+    finding_id: SQL_INJECTION
+    technique: Database Injection
+    impact: Arbitrary Query Execution
+    tool_to_run: sqlmap
+
+- id: blind_sqli_detected
+  description: Blind SQL injection behavior detected
+  when:
+    finding_type: sqli
+    contains: blind
+  then:
+    finding_id: BLIND_SQLI
+    technique: Inference-Based Injection
+    impact: Stealthy Data Extraction
+
+- id: db_backup_exposed
+  description: Database backup files exposed
+  when:
+    finding_type: exposed_file
+    severity: high
+  then:
+    finding_id: DB_BACKUP
+    technique: Offline Data Analysis
+    impact: Full Database Disclosure
+
+- id: db_version_disclosure
+  description: Database version disclosed in responses
+  when:
+    finding_type: banner_disclosure
+    severity: low
+  then:
+    finding_id: DB_VERSION
+    technique: Exploit Matching
+    impact: Targeted Database Exploitation
+
+- id: excessive_db_privileges
+  description: Application user has excessive database privileges
+  when:
+    finding_type: db_privilege
+    severity: high
+  then:
+    finding_id: DB_PRIV_ESC
+    technique: Privilege Escalation via Database
+    impact: Full Database Control
+
+# rules/database.yaml (continued – modern data platforms & deep exploitation paths)
+
+- id: neo4j_no_auth
+  description: Neo4j graph database accessible without authentication
+  when:
+    finding_type: auth_policy
+    service: neo4j
+    contains: no auth
+  then:
+    finding_id: NEO4J_NO_AUTH
+    technique: Graph Database Abuse
+    impact: Full Graph Data Disclosure
+
+- id: neo4j_custom_procedure
+  description: Custom Neo4j procedures enabled
+  when:
+    finding_type: db_feature
+    service: neo4j
+    severity: high
+  then:
+    finding_id: NEO4J_PROC
+    technique: Procedure Injection
+    impact: Remote Code Execution
+
+- id: couchdb_admin_party
+  description: CouchDB running in admin party mode
+  when:
+    finding_type: db_config
+    service: couchdb
+    contains: admin party
+  then:
+    finding_id: COUCHDB_ADMIN_PARTY
+    technique: Unauthenticated Admin Access
+    impact: Full Database Control
+
+- id: couchdb_rewrite_rules
+  description: CouchDB rewrite rules exposed
+  when:
+    finding_type: db_feature
+    service: couchdb
+    severity: medium
+  then:
+    finding_id: COUCHDB_REWRITE
+    technique: API Abuse
+    impact: Data Manipulation and Disclosure
+
+- id: influxdb_no_auth
+  description: InfluxDB exposed without authentication
+  when:
+    finding_type: auth_policy
+    service: influxdb
+    contains: no auth
+  then:
+    finding_id: INFLUX_NO_AUTH
+    technique: Time-Series Data Abuse
+    impact: Metrics and Sensor Data Exfiltration
+
+- id: influxdb_admin_token_leak
+  description: InfluxDB admin token disclosed
+  when:
+    finding_type: token_exposure
+    service: influxdb
+  then:
+    finding_id: INFLUX_TOKEN
+    technique: Token Replay
+    impact: Administrative Database Access
+
+- id: clickhouse_exposed
+  description: ClickHouse database exposed externally
+  when:
+    finding_type: open_port
+    service: clickhouse
+  then:
+    finding_id: CLICKHOUSE_EXPOSED
+    technique: Analytical DB Enumeration
+    impact: Large-Scale Data Exfiltration
+
+- id: clickhouse_no_auth
+  description: ClickHouse allows unauthenticated queries
+  when:
+    finding_type: auth_policy
+    service: clickhouse
+    contains: no auth
+  then:
+    finding_id: CLICKHOUSE_NO_AUTH
+    technique: Direct Query Abuse
+    impact: Full Dataset Access
+
+- id: hadoop_yarn_exposed
+  description: Hadoop YARN resource manager exposed
+  when:
+    finding_type: open_port
+    service: yarn
+  then:
+    finding_id: YARN_EXPOSED
+    technique: Distributed Job Injection
+    impact: Remote Code Execution on Cluster
+
+- id: hdfs_no_auth
+  description: HDFS accessible without authentication
+  when:
+    finding_type: auth_policy
+    service: hdfs
+    contains: no auth
+  then:
+    finding_id: HDFS_NO_AUTH
+    technique: Distributed File System Abuse
+    impact: Big Data Theft and Tampering
+
+- id: spark_ui_exposed
+  description: Apache Spark UI exposed
+  when:
+    finding_type: exposed_endpoint
+    service: spark
+  then:
+    finding_id: SPARK_UI
+    technique: Cluster Intelligence Gathering
+    impact: Credential and Job Disclosure
+
+- id: firebase_db_open
+  description: Firebase database rules allow public access
+  when:
+    finding_type: cloud_db
+    contains: public
+  then:
+    finding_id: FIREBASE_OPEN
+    technique: Cloud Database Abuse
+    impact: Full Application Data Exposure
+
+- id: bigquery_dataset_public
+  description: BigQuery dataset publicly accessible
+  when:
+    finding_type: cloud_db
+    service: bigquery
+    contains: public
+  then:
+    finding_id: BIGQUERY_PUBLIC
+    technique: Cloud Data Enumeration
+    impact: Sensitive Analytical Data Disclosure
+
+- id: db_link_feature_enabled
+  description: Database supports cross-database links
+  when:
+    finding_type: db_feature
+    contains: dblink
+  then:
+    finding_id: DBLINK_ENABLED
+    technique: Cross-Database Pivoting
+    impact: Expansion Beyond Initial Database
+
+- id: sql_file_write_allowed
+  description: Database allows writing files to disk
+  when:
+    finding_type: db_feature
+    contains: file write
+  then:
+    finding_id: SQL_FILE_WRITE
+    technique: Arbitrary File Write
+    impact: Web Shell or OS-Level Persistence
+
+- id: db_job_scheduler
+  description: Database job scheduler enabled
+  when:
+    finding_type: db_feature
+    contains: scheduler
+  then:
+    finding_id: DB_SCHEDULER
+    technique: Scheduled Task Abuse
+    impact: Persistent Command Execution
+
+- id: replication_channel_exposed
+  description: Database replication channel exposed
+  when:
+    finding_type: replication
+    severity: medium
+  then:
+    finding_id: DB_REPLICATION
+    technique: Data Poisoning or Sync Abuse
+    impact: Integrity Compromise Across Replicas
+
+- id: weak_db_audit
+  description: Database auditing disabled or insufficient
+  when:
+    finding_type: audit_policy
+    severity: low
+  then:
+    finding_id: DB_NO_AUDIT
+    technique: Stealth Persistence
+    impact: Reduced Detection of Malicious Activity
+
+# rules/database.yaml (final section – exploitation finishers & post-access amplification)
+
+- id: db_credentials_reused
+  description: Database credentials reused across multiple services
+  when:
+    finding_type: credential_reuse
+    service: database
+  then:
+    finding_id: DB_CRED_REUSE
+    technique: Credential Reuse
+    impact: Multi-Service Compromise
+
+- id: hardcoded_db_credentials
+  description: Hardcoded database credentials discovered
+  when:
+    finding_type: secret_exposure
+    severity: high
+  then:
+    finding_id: HARDCODED_DB_CREDS
+    technique: Secret Harvesting
+    impact: Persistent Unauthorized Database Access
+
+- id: db_admin_privileges
+  description: Database user has administrative privileges
+  when:
+    finding_type: db_privilege
+    contains: admin
+  then:
+    finding_id: DB_ADMIN
+    technique: Privileged Database Abuse
+    impact: Full Database and Host Interaction
+
+- id: db_extension_install_allowed
+  description: Database allows installation of extensions or plugins
+  when:
+    finding_type: db_feature
+    contains: extension install
+  then:
+    finding_id: DB_EXTENSION_INSTALL
+    technique: Extension Abuse
+    impact: Arbitrary Code Execution in DB Context
+
+- id: postgresql_copy_program
+  description: PostgreSQL COPY PROGRAM capability enabled
+  when:
+    finding_type: db_feature
+    service: postgresql
+    contains: copy program
+  then:
+    finding_id: POSTGRES_COPY_PROGRAM
+    technique: Command Execution via Database
+    impact: Operating System Command Execution
+
+- id: mysql_udf_enabled
+  description: MySQL user-defined functions enabled
+  when:
+    finding_type: db_feature
+    service: mysql
+    contains: udf
+  then:
+    finding_id: MYSQL_UDF
+    technique: UDF Injection
+    impact: Remote Code Execution
+
+- id: oracle_java_enabled
+  description: Oracle Java VM enabled in database
+  when:
+    finding_type: db_feature
+    service: oracle
+    contains: java
+  then:
+    finding_id: ORACLE_JAVA
+    technique: Java Stored Procedure Abuse
+    impact: OS Command Execution
+
+- id: db_trigger_abuse
+  description: Database triggers can be created or modified
+  when:
+    finding_type: db_feature
+    contains: trigger
+  then:
+    finding_id: DB_TRIGGER
+    technique: Trigger-Based Persistence
+    impact: Stealthy Re-Execution of Malicious Logic
+
+- id: db_event_scheduler_enabled
+  description: MySQL event scheduler enabled
+  when:
+    finding_type: db_feature
+    service: mysql
+    contains: event scheduler
+  then:
+    finding_id: MYSQL_EVENT_SCHEDULER
+    technique: Scheduled Task Persistence
+    impact: Recurring Command Execution
+
+- id: db_log_poisoning
+  description: Database logs writable or injectable
+  when:
+    finding_type: db_log
+    severity: medium
+  then:
+    finding_id: DB_LOG_POISON
+    technique: Log Poisoning
+    impact: Secondary Code Execution Path
+
+- id: db_backup_restore_allowed
+  description: Database backup and restore operations permitted
+  when:
+    finding_type: db_feature
+    contains: restore
+  then:
+    finding_id: DB_BACKUP_RESTORE
+    technique: Malicious Backup Injection
+    impact: Persistent Database Compromise
+
+- id: cloud_db_iam_overprivileged
+  description: Cloud database IAM role overly permissive
+  when:
+    finding_type: iam_policy
+    service: database
+    severity: high
+  then:
+    finding_id: DB_IAM_OVERPRIV
+    technique: Cloud Privilege Escalation
+    impact: Cross-Service Cloud Takeover
+
+- id: db_replica_trust
+  description: Database replicas implicitly trusted
+  when:
+    finding_type: replication
+    contains: trust
+  then:
+    finding_id: DB_REPLICA_TRUST
+    technique: Replica Poisoning
+    impact: Integrity Loss Across Environment
+
+- id: db_monitoring_creds
+  description: Monitoring or metrics credentials exposed
+  when:
+    finding_type: monitoring_creds
+    severity: medium
+  then:
+    finding_id: DB_MONITOR_CREDS
+    technique: Lateral Credential Pivot
+    impact: Access to Adjacent Systems
+
+- id: insufficient_row_level_security
+  description: Row-level security disabled or misconfigured
+  when:
+    finding_type: db_security
+    contains: rls disabled
+  then:
+    finding_id: DB_RLS_DISABLED
+    technique: Authorization Bypass
+    impact: Cross-Tenant Data Exposure
+
+- id: db_snapshot_public
+  description: Database snapshots publicly accessible
+  when:
+    finding_type: cloud_snapshot
+    contains: public
+  then:
+    finding_id: DB_PUBLIC_SNAPSHOT
+    technique: Offline Data Theft
+    impact: Complete Historical Data Disclosure

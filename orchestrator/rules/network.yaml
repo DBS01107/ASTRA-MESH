@@ -1,0 +1,685 @@
+# rules/network.yaml
+# Rules keyed on proven capabilities, not guesses
+
+- id: ssh_weak_crypto_detected
+  description: SSH weak cryptography detected
+  triggers:
+    - field: "capability"
+      match_type: "equals"
+      value: "weak_crypto"
+    - field: "details.service"
+      match_type: "equals"
+      value: "ssh"
+  action:
+    finding_id: SSH_WEAK_CRYPTO
+    technique: Cryptographic Attack
+    impact: Session Interception
+    tool_to_run: ssh_enum
+
+- id: ssh_password_auth_enabled
+  description: SSH allows password-based authentication
+  when:
+    finding_type: ssh_auth
+    contains: password
+    service: ssh
+  then:
+    finding_id: SSH_PASSWORD_AUTH
+    technique: Password Brute Force
+    impact: Remote Shell Access
+    tool_to_run: ssh_enum
+
+- id: ssh_root_login_allowed
+  description: SSH permits direct root login
+  when:
+    finding_type: ssh_config
+    contains: permitrootlogin yes
+    service: ssh
+  then:
+    finding_id: SSH_ROOT_LOGIN
+    technique: Direct Privileged Authentication
+    impact: Immediate Root Access
+
+- id: ssh_weak_kex_or_cipher
+  description: SSH supports weak key exchange or encryption algorithms
+  when:
+    finding_type: crypto_weakness
+    service: ssh
+  then:
+    finding_id: SSH_WEAK_CRYPTO
+    technique: Cryptographic Downgrade
+    impact: Session Decryption or MITM
+
+- id: telnet_service_exposed
+  description: Telnet service exposed with cleartext authentication
+  when:
+    finding_type: open_port
+    service: telnet
+    port: 23
+  then:
+    finding_id: TELNET_EXPOSED
+    technique: Cleartext Credential Sniffing
+    impact: Credential Disclosure
+
+- id: ftp_service_exposed
+  description: FTP service exposed to the network
+  when:
+    finding_type: open_port
+    service: ftp
+    port: 21
+  then:
+    finding_id: FTP_EXPOSED
+    technique: Service Enumeration
+    impact: Potential File Access
+    tool_to_run: ftp_enum
+
+- id: ftp_anonymous_login
+  description: FTP allows anonymous authentication
+  when:
+    finding_type: auth_policy
+    service: ftp
+    contains: anonymous
+  then:
+    finding_id: FTP_ANONYMOUS
+    technique: Unauthenticated File Access
+    impact: Data Exfiltration
+
+- id: smb_service_exposed
+  description: SMB service accessible on the network
+  when:
+    finding_type: open_port
+    service: smb
+    port: 445
+  then:
+    finding_id: SMB_EXPOSED
+    technique: Network Share Enumeration
+    impact: Lateral Movement Opportunity
+    tool_to_run: smb_enum
+
+- id: smb_null_session
+  description: SMB allows null or guest sessions
+  when:
+    finding_type: smb_auth
+    contains: null session
+  then:
+    finding_id: SMB_NULL_SESSION
+    technique: Unauthenticated Enumeration
+    impact: User and Share Disclosure
+
+- id: smb_v1_enabled
+  description: Legacy SMBv1 protocol enabled
+  when:
+    finding_type: protocol_version
+    service: smb
+    contains: v1
+  then:
+    finding_id: SMBV1_ENABLED
+    technique: Exploit Legacy Protocol
+    impact: Remote Code Execution
+
+- id: rdp_exposed
+  description: RDP service exposed to external network
+  when:
+    finding_type: open_port
+    service: rdp
+    port: 3389
+  then:
+    finding_id: RDP_EXPOSED
+    technique: Credential Harvesting
+    impact: Interactive Desktop Access
+
+- id: rdp_nla_disabled
+  description: RDP Network Level Authentication disabled
+  when:
+    finding_type: rdp_config
+    contains: nla disabled
+  then:
+    finding_id: RDP_NLA_DISABLED
+    technique: Pre-Authentication Exploitation
+    impact: Increased RDP Attack Surface
+
+- id: vnc_no_auth
+  description: VNC service accessible without authentication
+  when:
+    finding_type: auth_policy
+    service: vnc
+    contains: no auth
+  then:
+    finding_id: VNC_NO_AUTH
+    technique: Unauthenticated Remote Desktop Access
+    impact: Full GUI Session Control
+
+- id: snmp_public_community
+  description: SNMP service responds to default public community string
+  when:
+    finding_type: snmp_community
+    contains: public
+  then:
+    finding_id: SNMP_PUBLIC
+    technique: Network Device Enumeration
+    impact: Network Topology and Credential Leakage
+
+- id: snmp_write_community
+  description: SNMP write community string enabled
+  when:
+    finding_type: snmp_community
+    contains: write
+  then:
+    finding_id: SNMP_WRITE
+    technique: Network Device Manipulation
+    impact: Configuration Tampering
+
+- id: rpc_service_exposed
+  description: RPC service exposed and accessible
+  when:
+    finding_type: open_port
+    service: rpc
+  then:
+    finding_id: RPC_EXPOSED
+    technique: Service Abuse
+    impact: Remote Enumeration or Code Execution
+
+- id: outdated_network_service
+  description: Network service version known to be vulnerable
+  when:
+    finding_type: version_detected
+    severity: high
+  then:
+    finding_id: OUTDATED_NETWORK_SERVICE
+    technique: Known Exploit Reuse
+    impact: Remote Code Execution
+
+- id: excessive_open_ports
+  description: Host exposes unusually large number of open ports
+  when:
+    finding_type: attack_surface
+    severity: medium
+  then:
+    finding_id: LARGE_ATTACK_SURFACE
+    technique: Broad Attack Surface Exploration
+    impact: Increased Compromise Probability
+
+# rules/network.yaml (continued – advanced & often-missed attacker paths)
+
+- id: ntp_monlist_enabled
+  description: NTP service allows monlist or similar amplification queries
+  when:
+    finding_type: ntp_config
+    contains: monlist
+  then:
+    finding_id: NTP_AMPLIFICATION
+    technique: Reflection and Amplification Abuse
+    impact: DDoS Capability Leveraged via Target
+
+- id: dns_recursion_open
+  description: DNS server allows open recursion
+  when:
+    finding_type: dns_config
+    contains: recursion enabled
+  then:
+    finding_id: DNS_OPEN_RECURSION
+    technique: DNS Abuse and Cache Poisoning
+    impact: Traffic Redirection or DDoS Amplification
+
+- id: dns_zone_transfer_allowed
+  description: DNS zone transfer permitted to unauthorized clients
+  when:
+    finding_type: dns_zone_transfer
+    severity: high
+  then:
+    finding_id: DNS_ZONE_TRANSFER
+    technique: Internal Network Mapping
+    impact: Full DNS Namespace Disclosure
+
+- id: ldap_service_exposed
+  description: LDAP service exposed without access controls
+  when:
+    finding_type: open_port
+    service: ldap
+    port: 389
+  then:
+    finding_id: LDAP_EXPOSED
+    technique: Directory Enumeration
+    impact: User and Group Information Disclosure
+
+- id: ldap_anonymous_bind
+  description: LDAP allows anonymous bind
+  when:
+    finding_type: ldap_auth
+    contains: anonymous
+  then:
+    finding_id: LDAP_ANON_BIND
+    technique: Unauthenticated Directory Queries
+    impact: Credential and Role Enumeration
+
+- id: kerberos_service_exposed
+  description: Kerberos service reachable from untrusted network
+  when:
+    finding_type: open_port
+    service: kerberos
+    port: 88
+  then:
+    finding_id: KERBEROS_EXPOSED
+    technique: Kerberos Ticket Abuse
+    impact: Offline Password Cracking (AS-REP Roasting)
+
+- id: ipmi_service_exposed
+  description: IPMI or BMC management interface exposed
+  when:
+    finding_type: open_port
+    service: ipmi
+  then:
+    finding_id: IPMI_EXPOSED
+    technique: Out-of-Band Management Abuse
+    impact: Full Hardware-Level Control
+
+- id: smtp_open_relay
+  description: SMTP server allows unauthenticated relay
+  when:
+    finding_type: smtp_config
+    contains: open relay
+  then:
+    finding_id: SMTP_OPEN_RELAY
+    technique: Mail Relay Abuse
+    impact: Phishing Infrastructure or Reputation Damage
+
+- id: smtp_user_enum
+  description: SMTP service allows user enumeration
+  when:
+    finding_type: smtp_enum
+    severity: medium
+  then:
+    finding_id: SMTP_USER_ENUM
+    technique: Account Enumeration
+    impact: Targeted Credential Attacks
+
+- id: pop3_imap_cleartext
+  description: POP3 or IMAP allows cleartext authentication
+  when:
+    finding_type: crypto_weakness
+    service: pop3
+  then:
+    finding_id: MAIL_CLEARTEXT_AUTH
+    technique: Credential Sniffing
+    impact: Email Account Compromise
+
+- id: tftp_service_open
+  description: TFTP service exposed without authentication
+  when:
+    finding_type: open_port
+    service: tftp
+    port: 69
+  then:
+    finding_id: TFTP_EXPOSED
+    technique: Unauthenticated File Transfer
+    impact: Configuration and Firmware Leakage
+
+- id: rsync_module_listed
+  description: Rsync service exposes available modules
+  when:
+    finding_type: rsync_enum
+    severity: medium
+  then:
+    finding_id: RSYNC_ENUM
+    technique: File Share Enumeration
+    impact: Source Code or Backup Disclosure
+
+- id: nfs_export_public
+  description: NFS export accessible to untrusted hosts
+  when:
+    finding_type: nfs_export
+    contains: no_root_squash
+  then:
+    finding_id: NFS_NO_ROOT_SQUASH
+    technique: Remote File System Mount
+    impact: Privilege Escalation via File Manipulation
+
+- id: network_trust_relationship
+  description: Trust relationship identified between hosts or networks
+  when:
+    finding_type: trust_relationship
+    severity: medium
+  then:
+    finding_id: NETWORK_TRUST
+    technique: Pivoting and Lateral Movement
+    impact: Expansion of Compromise Scope
+
+- id: firewall_misconfiguration
+  description: Firewall allows unintended inbound access
+  when:
+    finding_type: firewall_rule
+    severity: high
+  then:
+    finding_id: FIREWALL_MISCONFIG
+    technique: Perimeter Bypass
+    impact: Direct Access to Internal Services
+
+- id: legacy_cleartext_protocols
+  description: Legacy cleartext protocols detected on the network
+  when:
+    finding_type: protocol_detection
+    contains: cleartext
+  then:
+    finding_id: CLEARTEXT_PROTOCOLS
+    technique: Passive Network Sniffing
+    impact: Credential and Session Capture
+# rules/network.yaml (continued – edge cases, legacy infra, real-world breach enablers)
+
+- id: icmp_timestamp_enabled
+  description: ICMP timestamp requests are permitted
+  when:
+    finding_type: icmp_feature
+    contains: timestamp
+  then:
+    finding_id: ICMP_TIMESTAMP
+    technique: Network Reconnaissance
+    impact: System Time and OS Fingerprinting
+
+- id: icmp_redirects_enabled
+  description: ICMP redirects accepted by host
+  when:
+    finding_type: icmp_config
+    contains: redirect
+  then:
+    finding_id: ICMP_REDIRECT
+    technique: Traffic Redirection
+    impact: Man-in-the-Middle Positioning
+
+- id: lldp_or_cdp_exposed
+  description: Network discovery protocols exposed externally
+  when:
+    finding_type: network_discovery
+    contains: lldp
+  then:
+    finding_id: NETWORK_TOPOLOGY_LEAK
+    technique: Infrastructure Mapping
+    impact: Internal Network Blueprint Disclosure
+
+- id: bgp_session_exposed
+  description: BGP service accessible from untrusted network
+  when:
+    finding_type: open_port
+    service: bgp
+    port: 179
+  then:
+    finding_id: BGP_EXPOSED
+    technique: Routing Manipulation
+    impact: Traffic Hijacking or Blackholing
+
+- id: redis_no_auth
+  description: Redis service exposed without authentication
+  when:
+    finding_type: auth_policy
+    service: redis
+    contains: no auth
+  then:
+    finding_id: REDIS_NO_AUTH
+    technique: In-Memory Datastore Abuse
+    impact: Remote Code Execution via Config Injection
+
+- id: memcached_exposed
+  description: Memcached service exposed publicly
+  when:
+    finding_type: open_port
+    service: memcached
+    port: 11211
+  then:
+    finding_id: MEMCACHED_EXPOSED
+    technique: Unauthenticated Cache Access
+    impact: Sensitive Data Disclosure or Amplification Abuse
+
+- id: elasticsearch_no_auth
+  description: Elasticsearch accessible without authentication
+  when:
+    finding_type: auth_policy
+    service: elasticsearch
+    contains: no auth
+  then:
+    finding_id: ELASTIC_NO_AUTH
+    technique: Data Store Enumeration
+    impact: Full Index Data Exfiltration
+
+- id: kubernetes_api_exposed
+  description: Kubernetes API server exposed
+  when:
+    finding_type: open_port
+    service: kubernetes
+    port: 6443
+  then:
+    finding_id: K8S_API_EXPOSED
+    technique: Container Orchestration Abuse
+    impact: Cluster Takeover
+
+- id: docker_api_exposed
+  description: Docker remote API exposed without TLS
+  when:
+    finding_type: docker_api
+    severity: high
+  then:
+    finding_id: DOCKER_API_EXPOSED
+    technique: Container Escape Preparation
+    impact: Host-Level Code Execution
+
+- id: mqtt_anonymous_access
+  description: MQTT broker allows anonymous connections
+  when:
+    finding_type: auth_policy
+    service: mqtt
+    contains: anonymous
+  then:
+    finding_id: MQTT_ANON
+    technique: Message Broker Abuse
+    impact: IoT Command Injection or Data Interception
+
+- id: bacnet_exposed
+  description: BACnet building automation protocol exposed
+  when:
+    finding_type: open_port
+    service: bacnet
+  then:
+    finding_id: BACNET_EXPOSED
+    technique: Industrial Protocol Abuse
+    impact: Physical System Manipulation
+
+- id: modbus_tcp_exposed
+  description: Modbus TCP service exposed without protection
+  when:
+    finding_type: open_port
+    service: modbus
+    port: 502
+  then:
+    finding_id: MODBUS_EXPOSED
+    technique: Industrial Control Abuse
+    impact: Unsafe State Manipulation
+
+- id: upnp_exposed
+  description: UPnP service accessible externally
+  when:
+    finding_type: open_port
+    service: upnp
+  then:
+    finding_id: UPNP_EXPOSED
+    technique: Network Device Enumeration
+    impact: Internal Port Mapping Disclosure
+
+- id: ntlmv1_allowed
+  description: NTLMv1 authentication permitted
+  when:
+    finding_type: auth_protocol
+    contains: ntlmv1
+  then:
+    finding_id: NTLMV1_ENABLED
+    technique: Weak Authentication Replay
+    impact: Credential Hash Cracking
+
+- id: l2tp_pptp_exposed
+  description: Legacy VPN protocols exposed
+  when:
+    finding_type: vpn_protocol
+    contains: pptp
+  then:
+    finding_id: LEGACY_VPN
+    technique: VPN Cryptographic Attack
+    impact: VPN Credential Recovery
+
+- id: zeroconf_mdns_exposed
+  description: Zeroconf or mDNS exposed beyond local network
+  when:
+    finding_type: service_discovery
+    contains: mdns
+  then:
+    finding_id: MDNS_EXPOSED
+    technique: Service Enumeration
+    impact: Host and Service Identification
+
+- id: internal_ip_leak
+  description: Internal IP ranges leaked via network responses
+  when:
+    finding_type: information_disclosure
+    contains: 10.
+  then:
+    finding_id: INTERNAL_IP_LEAK
+    technique: Internal Network Mapping
+    impact: Improved Pivot Targeting
+
+- id: vpn_split_tunnel_detected
+  description: VPN split tunneling configuration detected
+  when:
+    finding_type: vpn_config
+    contains: split
+  then:
+    finding_id: SPLIT_TUNNEL
+    technique: Network Pivot via VPN Client
+    impact: Bypass of Network Segmentation
+
+# rules/network.yaml (final section – rarely documented but breach-critical paths)
+
+- id: port_knocking_detected
+  description: Port knocking sequence identified
+  when:
+    finding_type: port_behavior
+    contains: knocking
+  then:
+    finding_id: PORT_KNOCKING
+    technique: Hidden Service Discovery
+    impact: Access to Otherwise Concealed Services
+
+- id: tcp_wrappers_misconfig
+  description: TCP wrappers allow overly broad access
+  when:
+    finding_type: access_control
+    contains: hosts.allow
+  then:
+    finding_id: TCP_WRAPPERS_WEAK
+    technique: Access Control Bypass
+    impact: Unauthorized Service Access
+
+- id: proxy_service_open
+  description: Network proxy service exposed
+  when:
+    finding_type: open_port
+    service: proxy
+  then:
+    finding_id: PROXY_EXPOSED
+    technique: Traffic Relay Abuse
+    impact: Anonymized Attacker Infrastructure
+
+- id: socks_proxy_no_auth
+  description: SOCKS proxy allows unauthenticated use
+  when:
+    finding_type: auth_policy
+    service: socks
+    contains: no auth
+  then:
+    finding_id: SOCKS_NO_AUTH
+    technique: Network Pivoting
+    impact: Internal Network Reachability
+
+- id: ipv6_enabled_unfiltered
+  description: IPv6 stack enabled without security controls
+  when:
+    finding_type: protocol_detection
+    contains: ipv6
+  then:
+    finding_id: IPV6_ATTACK_SURFACE
+    technique: Alternate Protocol Abuse
+    impact: Firewall Bypass via IPv6
+
+- id: multicast_exposed
+  description: Multicast traffic reachable externally
+  when:
+    finding_type: multicast_service
+    severity: medium
+  then:
+    finding_id: MULTICAST_EXPOSED
+    technique: Passive Network Recon
+    impact: Service and Host Enumeration
+
+- id: weak_tls_version
+  description: Service supports deprecated TLS/SSL versions
+  when:
+    finding_type: crypto_weakness
+    contains: tls1.0
+  then:
+    finding_id: WEAK_TLS
+    technique: Cryptographic Downgrade
+    impact: Encrypted Traffic Decryption
+
+- id: unauthenticated_api_port
+  description: Custom TCP API exposed without authentication
+  when:
+    finding_type: open_port
+    severity: high
+  then:
+    finding_id: UNAUTH_API
+    technique: Direct API Abuse
+    impact: Business Logic or System Control
+
+- id: network_device_mgmt_exposed
+  description: Network device management interface exposed
+  when:
+    finding_type: open_port
+    service: management
+  then:
+    finding_id: NET_MGMT_EXPOSED
+    technique: Infrastructure Device Takeover
+    impact: Network-Wide Traffic Control
+
+- id: legacy_unix_service
+  description: Legacy Unix service detected (rsh, rexec, rlogin)
+  when:
+    finding_type: open_port
+    contains: rsh
+  then:
+    finding_id: LEGACY_UNIX_SERVICE
+    technique: Trust-Based Authentication Abuse
+    impact: Remote Command Execution
+
+- id: unauthenticated_metrics_endpoint
+  description: Metrics or monitoring endpoint exposed
+  when:
+    finding_type: exposed_endpoint
+    contains: metrics
+  then:
+    finding_id: METRICS_EXPOSED
+    technique: Operational Intelligence Gathering
+    impact: Insight into System Internals
+
+- id: time_sync_mismatch
+  description: Significant time skew detected between hosts
+  when:
+    finding_type: time_analysis
+    severity: low
+  then:
+    finding_id: TIME_SKEW
+    technique: Authentication Weakening
+    impact: Increased Replay and Token Abuse Feasibility
+
+- id: network_segmentation_failure
+  description: Flat network architecture detected
+  when:
+    finding_type: segmentation
+    severity: high
+  then:
+    finding_id: FLAT_NETWORK
+    technique: Unrestricted Lateral Movement
+    impact: Rapid Environment-Wide Compromise

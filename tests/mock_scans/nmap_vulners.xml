@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE nmaprun>
+<nmaprun scanner="nmap" args="nmap -sV --script vulners -p 22 scanme.nmap.org" start="1672531200" startstr="Sun Jan  1 00:00:00 2023" version="7.93" xmloutputversion="1.05">
+<host starttime="1672531200" endtime="1672531210">
+<status state="up" reason="syn-ack" reason_ttl="0"/>
+<address addr="45.33.32.156" addrtype="ipv4"/>
+<ports>
+<port protocol="tcp" portid="22">
+<state state="open" reason="syn-ack" reason_ttl="0"/>
+<service name="ssh" product="OpenSSH" version="6.6.1p1" extrainfo="Ubuntu 2ubuntu2.13" ostype="Linux" method="probed" conf="10">
+<cpe>cpe:/a:openbsd:openssh:6.6.1p1</cpe>
+<cpe>cpe:/o:linux:linux_kernel</cpe>
+</service>
+<script id="vulners" output="
+  cpe:/a:openbsd:openssh:6.6.1p1: 
+    CVE-2016-10009 9.3 https://vulners.com/cve/CVE-2016-10009
+    CVE-2016-10010 9.3 https://vulners.com/cve/CVE-2016-10010
+    CVE-2016-6210 7.8 https://vulners.com/cve/CVE-2016-6210
+"/>
+</port>
+</ports>
+</host>
+</nmaprun>

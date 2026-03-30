@@ -1,0 +1,1 @@
+{"template-id": "CVE-2023-1234", "info": {"name": "Test CVE", "severity": "critical", "classification": {"cve-id": ["CVE-2023-1234"], "cvss-score": 9.8, "cvss-metrics": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"}}, "host": "http://example.com"}

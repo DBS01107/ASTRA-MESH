@@ -1,0 +1,61 @@
+# Git
+.git
+.gitignore
+.dockerignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+!frontend/src/lib/
+!frontend/src/lib/**
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.venv
+venv/
+
+# Node / Frontend
+node_modules/
+npm-debug.log
+yarn-error.log
+.next
+out
+frontend/node_modules
+frontend/.next
+
+# Scan Output & logs
+output/
+orchestrator/output/
+*.log
+
+# Large Media
+*.mp4
+*.pptx
+
+# OS / IDE
+.DS_Store
+.idea
+.vscode
+*.swp
+*.swo
+
+# Secrets
+.env
+.env.local
