@@ -326,13 +326,8 @@ These results are clearly labelled in both the PDF report (purple-header table w
 ### Devang Sonawane (https://github.com/DBS01107) (https://linkedin.com/in/devang-sonawane-73925a1b4/)
 ### Sarthak Pujari  (https://github.com/Sarthakzzzzz) (https://linkedin.com/in/sarthakzzzzz/)
 ### Adwait Bangale  (https://github.com/toxicated53) (https://www.linkedin.com/in/adwait-bangale-330710288/)
-
+### Ved Asawa (https://github.com/acid)
+### Snehal Jagtap (https://github.com/CyberSirenDev)
 ---
 
-#### Original team
-- Devang Sonawane
-- Sarthak Pujari
-- Adwait Bangale
-- Rashi Singh
-- Ved Asawa
-- Aditi Kharpade
+
