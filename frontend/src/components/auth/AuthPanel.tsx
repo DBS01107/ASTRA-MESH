@@ -91,10 +91,13 @@ export default function AuthPanel({ onAuthenticated }: AuthPanelProps) {
 
   return (
     <div className="h-screen w-screen bg-[#02030a] text-[#eaeaf0] flex items-center justify-center cyber-grid">
-      <div className="w-full max-w-4xl glass border border-[#22d3ee]/25 p-4 lg:p-6 scale-[0.7] origin-center">
+      <div
+        className="w-full max-w-4xl glass border border-[#22d3ee]/25 p-4 lg:p-6 scale-[1.5] origin-center"
+        style={{ fontFamily: "'SairaStencil', sans-serif" }}
+      >
         <div className="grid gap-4 lg:grid-cols-[minmax(240px,300px)_1fr] items-center">
           <section>
-            <h1 className="text-[13px] font-black tracking-[0.25em] text-[#22d3ee] uppercase mb-4">
+            <h1 className="text-[14px] font-black tracking-[0.25em] text-[#22d3ee] uppercase mb-4">
               ASTRA Access Control
             </h1>
 
@@ -102,8 +105,8 @@ export default function AuthPanel({ onAuthenticated }: AuthPanelProps) {
               <button
                 onClick={() => setMode("login")}
                 className={`flex-1 py-2 text-[10px] uppercase tracking-[0.2em] font-bold ${mode === "login"
-                    ? "bg-[#22d3ee] text-black"
-                    : "text-[#22d3ee]/80 hover:bg-[#22d3ee]/10"
+                  ? "bg-[#22d3ee] text-black"
+                  : "text-[#22d3ee]/80 hover:bg-[#22d3ee]/10"
                   }`}
               >
                 Login
@@ -111,8 +114,8 @@ export default function AuthPanel({ onAuthenticated }: AuthPanelProps) {
               <button
                 onClick={() => setMode("register")}
                 className={`flex-1 py-2 text-[10px] uppercase tracking-[0.2em] font-bold ${mode === "register"
-                    ? "bg-[#22d3ee] text-black"
-                    : "text-[#22d3ee]/80 hover:bg-[#22d3ee]/10"
+                  ? "bg-[#22d3ee] text-black"
+                  : "text-[#22d3ee]/80 hover:bg-[#22d3ee]/10"
                   }`}
               >
                 Register
@@ -184,7 +187,7 @@ export default function AuthPanel({ onAuthenticated }: AuthPanelProps) {
           <section className="border border-[#22d3ee]/15 bg-black/20 rounded-md p-3">
             <p className="text-[9px] uppercase tracking-[0.2em] text-[#22d3ee]/75">Creators</p>
 
-            <div className="mt-2 flex justify-between gap-2">
+            <div className="mt-2 grid grid-cols-2 gap-2">
               {CREATORS.map((creator) => (
                 <div
                   key={creator.name}
