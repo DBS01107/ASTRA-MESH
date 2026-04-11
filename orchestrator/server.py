@@ -328,7 +328,11 @@ async def get_graph(
         nodes.append(
             {
                 "id": str(node_id),
-                "data": {"label": data.get("label", node_id)},
+                "type": "custom",
+                "data": {
+                    "label": data.get("label", node_id),
+                    "severity": data.get("severity")
+                },
                 "position": {"x": 100, "y": 100},  # Placeholder position
                 "className": f"glass p-4 text-[10px] border-[{bg_color}]",
             }
