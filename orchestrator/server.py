@@ -328,9 +328,12 @@ async def get_graph(
         nodes.append(
             {
                 "id": str(node_id),
-                "data": {"label": data.get("label", node_id)},
-                "position": {"x": 100, "y": 100},  # Placeholder position
-                "className": f"glass p-4 text-[10px] border-[{bg_color}]",
+                "type": node_type,
+                "data": {
+                    "label": data.get("label", node_id),
+                    "severity": data.get("severity"),
+                    "cvss": data.get("cvss") or data.get("cvss_score")
+                }
             }
         )
 
@@ -341,7 +344,8 @@ async def get_graph(
                 "source": str(source),
                 "target": str(target),
                 "animated": True,
-                "style": {"stroke": "#22d3ee"},
+                "markerEnd": {"type": "arrowclosed", "color": "#22d3ee"},
+                "style": {"stroke": "#22d3ee", "strokeWidth": 2},
             }
         )
 
