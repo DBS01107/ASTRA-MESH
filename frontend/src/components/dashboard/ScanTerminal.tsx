@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import { Terminal, ChevronDown, ChevronUp } from "lucide-react";
+import Scrollable from "@/components/ui/Scrollable";
 
 interface ScanTerminalProps {
   logs: string[];
@@ -55,9 +56,9 @@ export default function ScanTerminal({ logs }: ScanTerminalProps) {
 
       {/* Log body */}
       {!collapsed && (
-        <div
-          ref={terminalRef}
-          className="flex-1 overflow-y-auto p-4 font-mono text-[10px] leading-relaxed bg-black/50 space-y-0.5"
+        <Scrollable
+          containerRef={terminalRef}
+          className="flex-1 p-4 font-mono text-[10px] leading-relaxed bg-black/50 space-y-0.5"
         >
           {logs.length === 0 ? (
             <div className="text-slate-600 italic">Waiting for scan to start...</div>
@@ -68,7 +69,7 @@ export default function ScanTerminal({ logs }: ScanTerminalProps) {
               </div>
             ))
           )}
-        </div>
+        </Scrollable>
       )}
     </div>
   );

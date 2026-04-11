@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { Brain, MessageSquare, ChevronRight, ChevronLeft } from "lucide-react";
 import AIChat from "./AIChat";
+import Scrollable from "@/components/ui/Scrollable";
 import { apiUrl } from "@/lib/api";
 import { authHeaders } from "@/lib/auth";
 import { withSession } from "@/lib/session";
@@ -102,9 +103,9 @@ export default function ExplainPanel({ logs, sessionId, authToken, onCollapse, w
       <div className="flex-1 overflow-auto p-4">
         {activeTab === "reasoning" ? (
           <div className="h-full flex flex-col gap-3">
-            <div className="flex-1 bg-slate-900/50 rounded border border-indigo-500/15 p-4 text-xs text-slate-300 leading-relaxed overflow-y-auto font-mono">
+            <Scrollable className="flex-1 bg-slate-900/50 rounded border border-indigo-500/15 p-4 text-xs text-slate-300 leading-relaxed font-mono">
               {reasoning}
-            </div>
+            </Scrollable>
             <button className="w-full py-2.5 rounded bg-cyan-500/15 border border-cyan-400/50 text-cyan-300 text-[10px] font-bold uppercase tracking-widest hover:bg-cyan-400/25 transition-all flex-shrink-0">
               Execute Remediation
             </button>

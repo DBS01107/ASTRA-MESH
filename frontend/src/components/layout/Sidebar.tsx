@@ -7,6 +7,7 @@ import {
   ChevronLeft, ChevronRight, Target, Cpu, Shield,
   BarChart2, Download, LogOut, User, Layers, Square, Power
 } from "lucide-react";
+import Scrollable from "@/components/ui/Scrollable";
 
 interface Scanner { name: string; enabled: boolean; }
 interface CheckCoverageSummary { total: number; detected: number; covered: number; uncovered: number; }
@@ -238,7 +239,7 @@ export default function Sidebar({ sessionId, authToken, currentUser, onLogout, o
       </div>
 
       {/* Scrollable body */}
-      <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5 custom-scrollbar">
+      <Scrollable className="flex-1 px-5 py-4 space-y-5 custom-scrollbar">
 
         {/* Target */}
         <div>
@@ -278,7 +279,7 @@ export default function Sidebar({ sessionId, authToken, currentUser, onLogout, o
           <p className="text-[10px] text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
             <Shield size={11} className="text-cyan-400" /> Modules
           </p>
-          <div className="space-y-0.5 bg-slate-900/40 rounded border border-indigo-500/15 p-2 max-h-40 overflow-y-auto">
+          <Scrollable className="space-y-0.5 bg-slate-900/40 rounded border border-indigo-500/15 p-2 h-40">
             {scanners.length === 0 ? (
               <div className="text-[9px] text-slate-600 italic px-1">Connecting to module registry...</div>
             ) : (
@@ -289,7 +290,7 @@ export default function Sidebar({ sessionId, authToken, currentUser, onLogout, o
                 </label>
               ))
             )}
-          </div>
+          </Scrollable>
           <div className="mt-1.5 flex justify-between text-[9px] text-slate-600 px-1">
             <span>{selectedScanners.size} / {scanners.length} selected</span>
           </div>
@@ -345,7 +346,7 @@ export default function Sidebar({ sessionId, authToken, currentUser, onLogout, o
           <p className="text-[10px] text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
             <User size={11} className="text-cyan-400" /> Recent Scans
           </p>
-          <div className="bg-slate-900/40 rounded border border-indigo-500/15 p-2 space-y-1 max-h-28 overflow-y-auto">
+          <Scrollable className="bg-slate-900/40 rounded border border-indigo-500/15 p-2 space-y-1 h-28">
             {recentScans.length === 0 ? (
               <div className="text-[9px] text-slate-600 italic px-1">No scans yet.</div>
             ) : (
@@ -356,9 +357,9 @@ export default function Sidebar({ sessionId, authToken, currentUser, onLogout, o
                 </div>
               ))
             )}
-          </div>
+          </Scrollable>
         </div>
-      </div>
+      </Scrollable>
 
       {/* Footer actions */}
       <div className="px-5 py-4 space-y-2 border-t border-indigo-500/15 flex-shrink-0">

@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "perfect-scrollbar/css/perfect-scrollbar.css";
 
 :root {
   --neon: #22d3ee;
@@ -129,6 +130,40 @@ html, body {
   background-size: 40px 40px;
   perspective: 1000px;
   transform-style: preserve-3d;
+}
+
+/* PerfectScrollbar Custom Theme Overrides */
+.ps__rail-y {
+  background-color: transparent !important;
+  width: 6px !important;
+  opacity: 0.6;
+}
+
+.ps__rail-y:hover,
+.ps__rail-y:focus,
+.ps__rail-y.ps--clicking {
+  background-color: rgba(99, 102, 241, 0.05) !important;
+  opacity: 1;
+}
+
+.ps__thumb-y {
+  background-color: var(--neon) !important;
+  width: 4px !important;
+  right: 2px !important;
+  border-radius: 4px !important;
+  box-shadow: 0 0 10px var(--neon);
+  opacity: 0.4;
+  transition: opacity 0.2s ease, width 0.2s ease;
+}
+
+.ps__rail-y:hover .ps__thumb-y,
+.ps__rail-y.ps--clicking .ps__thumb-y {
+  opacity: 0.8;
+  width: 6px !important;
+}
+
+.ps__rail-x {
+  display: none !important; /* Usually don't want horizontal scrollbars in this UI */
 }
 
 .glow-overlay {
