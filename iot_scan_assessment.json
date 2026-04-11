@@ -1,0 +1,48 @@
+{
+  "assessment": [
+    {
+      "ip": "127.0.0.1",
+      "mac": "",
+      "vendor": null,
+      "matches": [
+        {
+          "port": 80,
+          "service": "http",
+          "version": "",
+          "cve": "CVE-XXXX-0001",
+          "cvss": 7.5,
+          "desc": "Example HTTP server vulnerability allowing directory traversal"
+        },
+        {
+          "port": 8000,
+          "service": "http",
+          "version": "Uvicorn",
+          "cve": "CVE-XXXX-0001",
+          "cvss": 7.5,
+          "desc": "Example HTTP server vulnerability allowing directory traversal"
+        }
+      ],
+      "crypto_findings": [],
+      "protocol_findings": [
+        {
+          "port": 1883,
+          "type": "protocol",
+          "issue": "Anonymous MQTT Subscription allowed",
+          "severity": "high",
+          "evidence": "Topics and their most recent payloads: "
+        }
+      ],
+      "risk_score": 9.0,
+      "flags": {
+        "new_device": true
+      },
+      "risk_factors": [
+        "CVE-XXXX-0001 (CVSS 7.5) on port 80",
+        "CVE-XXXX-0001 (CVSS 7.5) on port 8000",
+        "new device",
+        "PROTOCOL:Anonymous MQTT Subscription allowed (port 1883)",
+        "Device observed for the first time on this network"
+      ]
+    }
+  ]
+}

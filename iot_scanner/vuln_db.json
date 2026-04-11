@@ -12,5 +12,26 @@
     "cve": "CVE-2016-10009",
     "cvss": 9.8,
     "desc": "Old OpenSSH version vulnerable to user enumeration"
+  },
+  {
+    "service": "mqtt",
+    "version_regex": "mosquitto 1\\.4\\.[0-9]+",
+    "cve": "CVE-2017-7650",
+    "cvss": 7.5,
+    "desc": "Mosquitto pattern ACL vulnerability allowing unauthorized access"
+  },
+  {
+    "service": "rtsp",
+    "version_regex": "RealNetworks",
+    "cve": "CVE-2005-0455",
+    "cvss": 9.8,
+    "desc": "RealNetworks Helix Server RTSP buffer overflow"
+  },
+  {
+    "service": "coap",
+    "version_regex": "Californium",
+    "cve": "CVE-2018-12536",
+    "cvss": 7.5,
+    "desc": "Eclipse Californium CoAP Server Denial of Service"
   }
 ]

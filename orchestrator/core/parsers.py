@@ -107,8 +107,10 @@ def parse_nmap_xml(file_path: str, target_context: Optional[str] = None) -> List
                 
                 # --- Fact 3: Vulnerabilities from scripts (e.g. vulners) ---
                 for script in port.findall("script"):
-                    if script.get("id") == "vulners":
-                        output = script.get("output", "")
+                    script_id = script.get("id")
+                    output = script.get("output", "")
+                    
+                    if script_id == "vulners":
                         # Parse vulners text output
                         # Format usually:
                         #   cpe:/a:vendor:product:version: 
@@ -147,6 +149,44 @@ def parse_nmap_xml(file_path: str, target_context: Optional[str] = None) -> List
                                         "cvss": cvss_score
                                     }
                                 ))
+                    
+                    # IoT Additions
+                    elif script_id == "mqtt-subscribe":
+                        out_l = output.lower()
+                        if "topics:" in out_l or "message" in out_l or "qos:" in out_l:
+                            findings.append(StandardFinding(
+                                id=f"nmap_mqtt_{addr}_{port_id}",
+                                source_tool="nmap",
+                                target=addr,
+                                finding_type="protocol_vulnerability",
+                                finding_value="anonymous_mqtt",
+                                risk_level="exploit",
+                                capability="anonymous_mqtt_access",
+                                port=port_id,
+                                service="mqtt",
+                                details={
+                                    "issue": "Anonymous MQTT Subscription allowed",
+                                    "evidence": output[:240]
+                                }
+                            ))
+                            
+                    elif script_id in ["rtsp-methods", "rtsp-url-brute"]:
+                        if "rtsp://" in output or "DESCRIBE" in output:
+                            findings.append(StandardFinding(
+                                id=f"nmap_rtsp_{addr}_{port_id}",
+                                source_tool="nmap",
+                                target=addr,
+                                finding_type="protocol_vulnerability",
+                                finding_value="exposed_rtsp",
+                                risk_level="exploit",
+                                capability="exposed_camera_stream",
+                                port=port_id,
+                                service="rtsp",
+                                details={
+                                    "issue": "Exposed RTSP Video Stream Methods",
+                                    "evidence": output[:240]
+                                }
+                            ))
 
 
     except (ET.ParseError, IOError) as e:
@@ -537,6 +577,7 @@ PARSER_MAPPING: Dict[str, Callable] = {
     "nmap-ssh-scripts": parse_nmap_xml,
     "nmap-ftp-scripts": parse_nmap_xml,
     "nmap-smb-scripts": parse_nmap_xml,
+    "nmap-iot-scripts": parse_nmap_xml,
     "whatweb": parse_whatweb_json,
     "nuclei": parse_nuclei_jsonl,
     "nikto": parse_nikto_txt,

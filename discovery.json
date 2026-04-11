@@ -1,0 +1,107 @@
+{
+  "generated_at": "2026-04-11T08:54:57.049918+00:00",
+  "devices": [
+    {
+      "ip": "127.0.0.1",
+      "name": "localhost",
+      "mac": null,
+      "vendor": null,
+      "services": [
+        {
+          "port": 22,
+          "proto": "tcp",
+          "state": "closed",
+          "service": "ssh",
+          "version": ""
+        },
+        {
+          "port": 23,
+          "proto": "tcp",
+          "state": "closed",
+          "service": "telnet",
+          "version": ""
+        },
+        {
+          "port": 80,
+          "proto": "tcp",
+          "state": "closed",
+          "service": "http",
+          "version": ""
+        },
+        {
+          "port": 443,
+          "proto": "tcp",
+          "state": "closed",
+          "service": "https",
+          "version": ""
+        },
+        {
+          "port": 554,
+          "proto": "tcp",
+          "state": "closed",
+          "service": "rtsp",
+          "version": ""
+        },
+        {
+          "port": 1883,
+          "proto": "tcp",
+          "state": "open",
+          "service": "mosquitto version 2.1.2",
+          "version": ""
+        },
+        {
+          "port": 5683,
+          "proto": "tcp",
+          "state": "closed",
+          "service": "coap",
+          "version": ""
+        },
+        {
+          "port": 8000,
+          "proto": "tcp",
+          "state": "open",
+          "service": "http",
+          "version": "Uvicorn"
+        },
+        {
+          "port": 8080,
+          "proto": "tcp",
+          "state": "closed",
+          "service": "http-proxy",
+          "version": ""
+        },
+        {
+          "port": 8443,
+          "proto": "tcp",
+          "state": "closed",
+          "service": "https-alt",
+          "version": ""
+        },
+        {
+          "port": 8888,
+          "proto": "tcp",
+          "state": "closed",
+          "service": "sun-answerbook",
+          "version": ""
+        },
+        {
+          "port": 9000,
+          "proto": "tcp",
+          "state": "closed",
+          "service": "cslistener",
+          "version": ""
+        }
+      ],
+      "crypto_findings": [],
+      "protocol_findings": [
+        {
+          "port": 1883,
+          "type": "protocol",
+          "issue": "Anonymous MQTT Subscription allowed",
+          "severity": "high",
+          "evidence": "Topics and their most recent payloads: "
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,142 @@
+{
+  "generated_at": "2026-04-11T10:30:37.062414+00:00",
+  "devices": [
+    {
+      "ip": "127.0.0.1",
+      "name": "localhost",
+      "mac": null,
+      "vendor": null,
+      "services": [
+        {
+          "port": 22,
+          "proto": "tcp",
+          "state": "closed",
+          "service": "ssh",
+          "version": ""
+        },
+        {
+          "port": 23,
+          "proto": "tcp",
+          "state": "closed",
+          "service": "telnet",
+          "version": ""
+        },
+        {
+          "port": 80,
+          "proto": "tcp",
+          "state": "closed",
+          "service": "http",
+          "version": ""
+        },
+        {
+          "port": 443,
+          "proto": "tcp",
+          "state": "closed",
+          "service": "https",
+          "version": ""
+        },
+        {
+          "port": 554,
+          "proto": "tcp",
+          "state": "closed",
+          "service": "rtsp",
+          "version": ""
+        },
+        {
+          "port": 1883,
+          "proto": "tcp",
+          "state": "open",
+          "service": "mosquitto version 2.1.2",
+          "version": ""
+        },
+        {
+          "port": 1884,
+          "proto": "tcp",
+          "state": "closed",
+          "service": "idmaps",
+          "version": ""
+        },
+        {
+          "port": 5683,
+          "proto": "tcp",
+          "state": "closed",
+          "service": "coap",
+          "version": ""
+        },
+        {
+          "port": 8000,
+          "proto": "tcp",
+          "state": "closed",
+          "service": "http-alt",
+          "version": ""
+        },
+        {
+          "port": 8080,
+          "proto": "tcp",
+          "state": "closed",
+          "service": "http-proxy",
+          "version": ""
+        },
+        {
+          "port": 8443,
+          "proto": "tcp",
+          "state": "closed",
+          "service": "https-alt",
+          "version": ""
+        },
+        {
+          "port": 8883,
+          "proto": "tcp",
+          "state": "closed",
+          "service": "secure-mqtt",
+          "version": ""
+        },
+        {
+          "port": 8888,
+          "proto": "tcp",
+          "state": "closed",
+          "service": "sun-answerbook",
+          "version": ""
+        },
+        {
+          "port": 9000,
+          "proto": "tcp",
+          "state": "closed",
+          "service": "cslistener",
+          "version": ""
+        },
+        {
+          "port": 9001,
+          "proto": "tcp",
+          "state": "closed",
+          "service": "tor-orport",
+          "version": ""
+        }
+      ],
+      "crypto_findings": [],
+      "protocol_findings": [
+        {
+          "port": 1883,
+          "type": "protocol",
+          "issue": "anonymous_connect",
+          "severity": "medium",
+          "evidence": "MQTT broker accepted unauthenticated connection."
+        },
+        {
+          "port": 1883,
+          "type": "protocol",
+          "issue": "anonymous_subscribe",
+          "severity": "high",
+          "evidence": "Topics and their most recent payloads: "
+        },
+        {
+          "port": 1883,
+          "type": "protocol",
+          "issue": "anonymous_publish",
+          "severity": "critical",
+          "evidence": "Inferred from successful anonymous subscription."
+        }
+      ]
+    }
+  ]
+}
