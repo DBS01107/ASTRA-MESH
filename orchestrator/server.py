@@ -4,6 +4,7 @@ import sys
 from queue import Empty
 from typing import Any, Dict, List, Optional
 
+from dotenv import load_dotenv
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Query, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, StreamingResponse
@@ -11,6 +12,9 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
+
+# Load .env when running directly (safe no-op when env vars are already injected).
+load_dotenv()
 
 # Add the ASTRA root to sys.path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -39,6 +43,54 @@ from orchestrator.core.security import (
     hash_password,
     verify_password,
 )
+
+DEFAULT_DEV_CORS_ORIGIN_REGEX = (
+    r"^https?://("
+    r"localhost|127\.0\.0\.1|0\.0\.0\.0|"
+    r"[a-zA-Z0-9-]+\.local|"
+    r"10(?:\.\d{1,3}){3}|"
+    r"192\.168(?:\.\d{1,3}){2}|"
+    r"172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2}"
+    r")(?::\d+)?$"
+)
+
+
+def _parse_csv_env(name: str) -> List[str]:
+    raw_value = os.getenv(name, "")
+    return [entry.strip().rstrip("/") for entry in raw_value.split(",") if entry.strip()]
+
+
+def _resolve_cors_origins() -> List[str]:
+    configured_origins = _parse_csv_env("ASTRA_CORS_ORIGINS")
+    if configured_origins:
+        return configured_origins
+
+    # Local-first defaults for common frontend dev ports.
+    return [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://0.0.0.0:3000",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://0.0.0.0:5173",
+    ]
+
+
+def _resolve_cors_origin_regex() -> Optional[str]:
+    configured_regex = os.getenv("ASTRA_CORS_ORIGIN_REGEX", "").strip()
+    if configured_regex:
+        return configured_regex
+
+    # If explicit origins are configured, do not add an implicit wildcard regex.
+    if os.getenv("ASTRA_CORS_ORIGINS", "").strip():
+        return None
+
+    # Allow private-network and .local origins for laptop <-> LAN backend development.
+    return DEFAULT_DEV_CORS_ORIGIN_REGEX
+
+
+ALLOWED_CORS_ORIGINS = _resolve_cors_origins()
+ALLOWED_CORS_ORIGIN_REGEX = _resolve_cors_origin_regex()
 
 app = FastAPI(title="ASTRA API")
 bearer_scheme = HTTPBearer(auto_error=False)
@@ -168,7 +220,8 @@ async def startup_event() -> None:
 # Enable CORS for the frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, restrict this
+    allow_origins=ALLOWED_CORS_ORIGINS,
+    allow_origin_regex=ALLOWED_CORS_ORIGIN_REGEX,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
