@@ -88,6 +88,7 @@ export default function TourGuide({ currentUser }: TourProps) {
         primaryColor: "#22d3ee",
         textColor: "#eaeaf0",
         zIndex: 10000,
+        skipBeacon: true,
       },
       tooltip: {
         border: "1px solid rgba(34, 211, 238, 0.4)",
