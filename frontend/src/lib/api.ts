@@ -1,5 +1,5 @@
 const DEFAULT_API_BASE_URL = "http://localhost:8000";
-const LOCALHOST_HOSTNAMES = new Set(["localhost", "127.0.0.1", "0.0.0.0"]);
+const LOCALHOST_HOSTNAMES = new Set(["localhost", "127.0.0.1", "0.0.0.0", "::1"]);
 
 function trimTrailingSlashes(value: string): string {
   return value.replace(/\/+$/, "");
@@ -22,10 +22,11 @@ function resolveApiBaseUrl(): string {
 
   try {
     const parsed = new URL(configured);
-    const browserHost = window.location.hostname || "localhost";
+    const browserHost = (window.location.hostname || "localhost").toLowerCase();
+    const parsedHost = parsed.hostname.toLowerCase();
 
     // If build-time config points to localhost, adapt to the browser host for remote clients.
-    if (LOCALHOST_HOSTNAMES.has(parsed.hostname) && !LOCALHOST_HOSTNAMES.has(browserHost)) {
+    if (LOCALHOST_HOSTNAMES.has(parsedHost) && !LOCALHOST_HOSTNAMES.has(browserHost)) {
       parsed.hostname = browserHost;
       if (!parsed.port) {
         parsed.port = "8000";
