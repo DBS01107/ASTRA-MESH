@@ -7,9 +7,21 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from typing import Dict, List, Sequence, Set
 
-COMMON_PORTS = "22,23,80,443,554,8000,8080,8443,8888,9000,1883,5683"
+from iot_scanner.oui_fallback import lookup_vendor
+
+COMMON_PORTS = "22,23,80,443,554,8000,8080,8443,8888,9000,1883,1884,5683,8883,9001"
 TLS_LIKE_PORTS = {443, 465, 853, 993, 995, 8443, 8883}
 SSH_PORT = 22
+
+PROTOCOL_PORTS = {1883, 1884, 554, 5683, 8883, 9001}
+PROTOCOL_SCRIPTS = {
+    1883: "mqtt-subscribe",
+    1884: "mqtt-subscribe",
+    8883: "mqtt-subscribe",
+    9001: "mqtt-subscribe",
+    554: "rtsp-methods,rtsp-url-brute",
+    5683: "coap-resources"
+}
 
 WEAK_TLS_MARKERS = {
     "tlsv1.0": ("Legacy TLS 1.0 enabled", "high"),
@@ -55,6 +67,9 @@ def _parse_host_identity(host_el: ET.Element) -> Dict:
         first_addr = host_el.find("address")
         if first_addr is not None:
             ip = first_addr.get("addr")
+
+    if not vendor and mac:
+        vendor = lookup_vendor(mac)
 
     name_el = host_el.find("hostnames/hostname")
     name = name_el.get("name") if name_el is not None else None
@@ -232,6 +247,115 @@ def scan_crypto_findings(ip: str, services: List[Dict]) -> List[Dict]:
     return findings
 
 
+def _candidate_protocol_ports(services: List[Dict]) -> Set[int]:
+    ports = set()
+    for svc in services:
+        if svc.get("state") != "open":
+            continue
+        port = svc.get("port")
+        if isinstance(port, int) and port in PROTOCOL_PORTS:
+            ports.add(port)
+    return ports
+
+
+def _parse_protocol_issues(port: int, script_id: str, output: str) -> List[Dict]:
+    findings = []
+    out_l = output.lower()
+
+    if script_id == "mqtt-subscribe":
+        if "connection accepted" in out_l or "topics:" in out_l or "message" in out_l or "qos:" in out_l:
+            findings.append({
+                "port": port,
+                "type": "protocol",
+                "issue": "anonymous_connect",
+                "severity": "medium",
+                "evidence": "MQTT broker accepted unauthenticated connection."
+            })
+        if "topics:" in out_l or "message" in out_l or "qos:" in out_l:
+            findings.append({
+                "port": port,
+                "type": "protocol",
+                "issue": "anonymous_subscribe",
+                "severity": "high",
+                "evidence": output.strip().split('\n')[0][:80]
+            })
+            findings.append({
+                "port": port,
+                "type": "protocol",
+                "issue": "anonymous_publish",
+                "severity": "critical",
+                "evidence": "Inferred from successful anonymous subscription."
+            })
+
+    elif script_id in ("rtsp-methods", "rtsp-url-brute"):
+        if "describe" in out_l or "play" in out_l or "setup" in out_l:
+            findings.append({
+                "port": port,
+                "type": "protocol",
+                "issue": "Unauthenticated RTSP methods/stream exposed",
+                "severity": "high",
+                "evidence": output.strip().split('\n')[0][:80]
+            })
+
+    elif script_id == "coap-resources":
+        if "title=" in out_l or "rt=" in out_l or "ct=" in out_l or "resources" in out_l:
+            findings.append({
+                "port": port,
+                "type": "protocol",
+                "issue": "CoAP resources easily discoverable",
+                "severity": "medium",
+                "evidence": output.strip().split('\n')[0][:80]
+            })
+
+    return findings
+
+
+def scan_protocol_findings(ip: str, services: List[Dict]) -> List[Dict]:
+    ports = _candidate_protocol_ports(services)
+    if not ports:
+        return []
+
+    findings: List[Dict] = []
+
+    for port in ports:
+        scripts = PROTOCOL_SCRIPTS.get(port)
+        if not scripts:
+            continue
+
+        try:
+            cmd = ["-Pn", "--script", scripts, "-oX", "-"]
+            if port == 5683:
+                cmd.extend(["-sU", "-p", "5683"])
+            elif port in (8883, 9001):
+                cmd.extend(["-p", str(port)])
+                # Nmap might need `-sV` for web sockets or TLS wrap, but explicit port is fine for now
+            else:
+                cmd.extend(["-p", str(port)])
+            
+            cmd.append(ip)
+
+            out = run_nmap(cmd)
+            root = ET.fromstring(out)
+            for port_el in root.findall(".//port"):
+                portid = port_el.get("portid")
+                state_el = port_el.find("state")
+                state = state_el.get("state") if state_el is not None else "unknown"
+                if state != "open" or not portid:
+                    continue
+
+                port_num = int(portid)
+                for script in port_el.findall("script"):
+                    script_id = script.get("id") or ""
+                    output = script.get("output") or ""
+                    issues = _parse_protocol_issues(port_num, script_id, output)
+                    for iss in issues:
+                        _append_unique_issue(findings, iss)
+        except Exception:
+            pass
+
+    return findings
+
+
 def scan_host_services(
     host: Dict, ports: str = COMMON_PORTS, enable_crypto_checks: bool = True
 ) -> Dict:
@@ -254,6 +378,13 @@ def scan_host_services(
         except Exception as exc:
             result["crypto_findings"] = []
             result["crypto_scan_error"] = str(exc)
+
+    try:
+        result["protocol_findings"] = scan_protocol_findings(ip, services)
+    except Exception as exc:
+        result["protocol_findings"] = []
+        result["protocol_scan_error"] = str(exc)
+
     return result
 
 

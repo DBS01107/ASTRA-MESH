@@ -4,11 +4,13 @@ This package provides a small, privacy-focused, local IoT discovery and vulnerab
 
 Quick features
 - Network discovery using Nmap (local-only)
+- **Advanced IoT Protocol Scanning:** Modular unauthenticated access detection for **MQTT**, **RTSP**, and **CoAP** (including extended ports and UDP).
+- **Offline Device Fingerprinting:** Uses a lightweight local `.py` MAC dictionary for fast vendor identification (Espressif, Tuya, Philips, etc.).
 - Service/version matching against a local `vuln_db.json`
 - Weak encryption checks (TLS/SSH) using Nmap scripts (`ssl-enum-ciphers`, `ssh2-enum-algos`)
 - Unauthorized device detection using an optional local baseline allowlist
 - First-seen device tracking via a local sightings database
-- Risk scoring (CVSS-informed) and heatmap visualization
+- Risk scoring (CVSS-informed) and highly readable visual **HTML reporting** and heatmap visualization
 - One-click mitigation script generator with rollback support (iptables), suitable for Raspberry Pi
 
 Prerequisites
@@ -43,12 +45,10 @@ python -m iot_scanner.assess discovery.json --out assessment.json \
   --sightings iot_scanner/device_sightings.json
 ```
 
-- Generate report and heatmap (PNG):
+- Generate assessment JSON, Heatmap (PNG), and human-readable HTML Report:
 
-```python
-from iot_scanner import report
-report.write_report(assessment, 'iot_report.json')
-report.plot_heatmap(assessment, outdir='reports')
+```bash
+python -m iot_scanner.report assessment.json --out-html iot_report.html
 ```
 
 - One-click firewall isolation script for high-risk devices (Raspberry Pi):
@@ -77,8 +77,9 @@ Baseline allowlist example (`baseline_allowlist.json`)
 ```
 
 Notes on outputs
-- Discovery output now includes host identity metadata when available (`ip`, `name`, `mac`, `vendor`) and `crypto_findings`.
-- Assessment output includes `flags`, `risk_factors`, and unauthorized/new-device indicators.
+- **Discovery** output now includes host identity metadata (`ip`, `name`, `mac`, `vendor`). Missing vendors are intelligently inferred via a local OUI dictionary.
+- **Protocol Findings** check for granular IoT vulnerabilities (e.g., `anonymous_subscribe` for MQTT).
+- **Assessment** output assigns high CVSS penalties for open/insecure IoT protocols and flags unauthorized devices.
 - Mitigation command writes two scripts: the apply script and rollback script.
 
 Privacy & Scalability

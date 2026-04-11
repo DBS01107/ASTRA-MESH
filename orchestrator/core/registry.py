@@ -58,6 +58,11 @@ SCANNERS = [
         "enabled": True, "requires_url": False, "mode": "active", "depends_on": ["nmap"]
     },
     {
+        "name": "nmap-iot-scripts",
+        "cmd_template": "nmap -p 554,1883,1884,8883,9001 --script mqtt-subscribe,rtsp-methods -oX orchestrator/output/raw/{target}_nmap_iot.xml {target}",
+        "enabled": True, "requires_url": False, "mode": "active", "depends_on": ["nmap"]
+    },
+    {
         "name": "enum4linux",
         "cmd_template": "enum4linux -a {target}", # Output is redirected by runner, so no -o flag needed
         "enabled": True, "requires_url": False, "mode": "active", "depends_on": ["nmap"]
@@ -103,6 +108,7 @@ SCANNERS = [
             "nmap-ssh-scripts",
             "nmap-ftp-scripts",
             "nmap-smb-scripts",
+            "nmap-iot-scripts",
             "enum4linux",
             "sqlmap",
             "sslyze",
@@ -120,6 +126,7 @@ TOOL_BINARIES = {
     'nmap-ssh-scripts': 'nmap',
     'nmap-ftp-scripts': 'nmap',
     'nmap-smb-scripts': 'nmap',
+    'nmap-iot-scripts': 'nmap',
     'whatweb': 'whatweb',
     'nuclei': 'nuclei',
     'sslyze': 'sslyze',

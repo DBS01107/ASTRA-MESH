@@ -22,9 +22,11 @@ It features a futuristic, real-time **Next.js** dashboard and supports two disti
 The repository now also includes `iot_scanner/`, a privacy-focused scanner for home/small-office IoT networks.
 
 - **Network Discovery + JSON Output**: Nmap-based host/service discovery with local JSON reports.
+- **Advanced Protocol Checks**: Modular discovery of unauthenticated **MQTT**, **RTSP**, and **CoAP** streams.
 - **Weak Encryption Detection**: TLS/SSH checks via `ssl-enum-ciphers` and `ssh2-enum-algos`.
+- **Offline Fingerprinting**: Vendor metadata derived heavily from local MAC dictionaries.
 - **Unauthorized Access Detection**: optional baseline allowlist (`IP/MAC`) + first-seen tracking.
-- **Risk Prioritization**: CVSS-informed scoring with risk factors and heatmap generation.
+- **Risk Prioritization**: CVSS-informed scoring with highly readable **HTML Reports** and heatmaps.
 - **One-click Mitigation**: `iptables` quarantine script generation with whitelist and rollback script.
 - **Scalability Goal**: configurable thread pool (`--max-workers`) for 50+ device environments.
 

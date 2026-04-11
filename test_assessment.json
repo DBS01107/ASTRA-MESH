@@ -1,0 +1,51 @@
+{
+  "assessment": [
+    {
+      "ip": "127.0.0.1",
+      "mac": "",
+      "vendor": null,
+      "matches": [
+        {
+          "port": 80,
+          "service": "http",
+          "version": "",
+          "cve": "CVE-XXXX-0001",
+          "cvss": 7.5,
+          "desc": "Example HTTP server vulnerability allowing directory traversal"
+        }
+      ],
+      "crypto_findings": [],
+      "protocol_findings": [
+        {
+          "port": 1883,
+          "type": "protocol",
+          "issue": "anonymous_connect",
+          "severity": "medium",
+          "evidence": "MQTT broker accepted unauthenticated connection."
+        },
+        {
+          "port": 1883,
+          "type": "protocol",
+          "issue": "anonymous_subscribe",
+          "severity": "high",
+          "evidence": "Topics and their most recent payloads: "
+        },
+        {
+          "port": 1883,
+          "type": "protocol",
+          "issue": "anonymous_publish",
+          "severity": "critical",
+          "evidence": "Inferred from successful anonymous subscription."
+        }
+      ],
+      "risk_score": 10.0,
+      "flags": {},
+      "risk_factors": [
+        "CVE-XXXX-0001 (CVSS 7.5) on port 80",
+        "PROTOCOL:anonymous_connect (port 1883)",
+        "PROTOCOL:anonymous_subscribe (port 1883)",
+        "PROTOCOL:anonymous_publish (port 1883)"
+      ]
+    }
+  ]
+}

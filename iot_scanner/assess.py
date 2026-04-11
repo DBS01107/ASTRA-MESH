@@ -21,6 +21,13 @@ _CRYPTO_SEVERITY_WEIGHTS = {
     "low": 0.2,
 }
 
+_PROTOCOL_SEVERITY_WEIGHTS = {
+    "critical": 1.5,
+    "high": 0.8,
+    "medium": 0.4,
+    "low": 0.2,
+}
+
 
 def load_vuln_db(path: str = VULN_DB_PATH) -> List[Dict]:
     with open(path, "r") as f:
@@ -163,11 +170,13 @@ def match_vulns(services: List[Dict], vuln_db: List[Dict]) -> List[Dict]:
     return matches
 
 
-def compute_risk(matches: List[Dict], extra_flags: Dict = None, crypto_findings: List[Dict] = None) -> float:
+def compute_risk(matches: List[Dict], extra_flags: Dict = None, crypto_findings: List[Dict] = None, protocol_findings: List[Dict] = None) -> float:
     if extra_flags is None:
         extra_flags = {}
     if crypto_findings is None:
         crypto_findings = []
+    if protocol_findings is None:
+        protocol_findings = []
 
     max_cvss = 0.0
     for m in matches:
@@ -189,12 +198,18 @@ def compute_risk(matches: List[Dict], extra_flags: Dict = None, crypto_findings:
         crypto_penalty += _CRYPTO_SEVERITY_WEIGHTS.get(severity, 0.2)
     penalty += min(2.0, crypto_penalty)
 
+    protocol_penalty = 0.0
+    for finding in protocol_findings:
+        severity = (finding.get("severity") or "high").lower()
+        protocol_penalty += _PROTOCOL_SEVERITY_WEIGHTS.get(severity, 0.8)
+    penalty += min(3.0, protocol_penalty)
+
     score = min(10.0, max_cvss + penalty)
     return round(score, 2)
 
 
 def _derive_risk_factors(
-    matches: List[Dict], flags: Dict, crypto_findings: List[Dict], access_reasons: List[str]
+    matches: List[Dict], flags: Dict, crypto_findings: List[Dict], protocol_findings: List[Dict], access_reasons: List[str]
 ) -> List[str]:
     factors = []
     for m in matches:
@@ -207,6 +222,10 @@ def _derive_risk_factors(
     for finding in crypto_findings:
         factors.append(
             f"{finding.get('type', 'crypto').upper()}:{finding.get('issue')} (port {finding.get('port')})"
+        )
+    for finding in protocol_findings:
+        factors.append(
+            f"PROTOCOL:{finding.get('issue')} (port {finding.get('port')})"
         )
     factors.extend(access_reasons)
     return factors
@@ -222,6 +241,7 @@ def assess_device(device: Dict, vuln_db: List[Dict], access_flags: Dict = None, 
     matches = match_vulns(services, vuln_db)
     flags = dict(access_flags)
     crypto_findings = device.get("crypto_findings", [])
+    protocol_findings = device.get("protocol_findings", [])
 
     for s in services:
         if s.get("port") == 23 and s.get("state") == "open":
@@ -231,14 +251,15 @@ def assess_device(device: Dict, vuln_db: List[Dict], access_flags: Dict = None, 
     if crypto_findings:
         flags["weak_encryption"] = True
 
-    score = compute_risk(matches, flags, crypto_findings)
-    risk_factors = _derive_risk_factors(matches, flags, crypto_findings, access_reasons)
+    score = compute_risk(matches, flags, crypto_findings, protocol_findings)
+    risk_factors = _derive_risk_factors(matches, flags, crypto_findings, protocol_findings, access_reasons)
     return {
         "ip": device.get("ip"),
         "mac": _normalize_mac(device.get("mac", "")),
         "vendor": device.get("vendor"),
         "matches": matches,
         "crypto_findings": crypto_findings,
+        "protocol_findings": protocol_findings,
         "risk_score": score,
         "flags": flags,
         "risk_factors": risk_factors,
