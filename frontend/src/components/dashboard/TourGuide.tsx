@@ -79,10 +79,7 @@ export default function TourGuide({ currentUser }: TourProps) {
     steps,
     run,
     continuous: true,
-    scrollToFirstStep: true,
-    showProgress: true,
-    showSkipButton: true,
-    callback: handleJoyrideCallback,
+    onEvent: handleJoyrideCallback,
     styles: {
       options: {
         arrowColor: "#02030a",

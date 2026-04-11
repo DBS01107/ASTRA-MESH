@@ -15,6 +15,7 @@ import { authHeaders, AuthUser, clearAuthToken, getAuthToken, setAuthToken, with
 import { getClientSessionId, resetClientSessionId, withSession } from "@/lib/session";
 
 import ResizablePane from "@/components/ui/ResizablePane";
+import TourGuide from "@/components/dashboard/TourGuide";
 
 export default function Home() {
   const [graph, setGraph] = useState<any>({ nodes: [], edges: [] });
@@ -107,6 +108,7 @@ export default function Home() {
     fetchData();
     return () => clearTimeout(timer);
   }, [sessionId, authToken]);
+
 
   if (authLoading) {
     return (
@@ -228,6 +230,8 @@ export default function Home() {
           onCollapse={setExplainCollapsed}
         />
       </ResizablePane>
+
+      <TourGuide currentUser={currentUser} />
     </div>
   );
 }
