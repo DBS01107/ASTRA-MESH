@@ -1,30 +1,48 @@
 // src/components/dashboard/AssetNode.tsx
-import { Shield, Activity } from 'lucide-react';
+import { Handle, Position } from 'reactflow';
 
 export default function AssetNode({ data }: any) {
+  // Explicitly map string outputs based on strict CVSS/Ranking payload mappings
+  let severity = data.severity;
+  
+  if (!severity) {
+    if (data.cvss !== undefined) {
+      const cvssScore = parseFloat(data.cvss);
+      if (!isNaN(cvssScore)) {
+        if (cvssScore >= 9.0) severity = 'CRITICAL';
+        else if (cvssScore >= 7.0) severity = 'HIGH';
+        else if (cvssScore >= 4.0) severity = 'MEDIUM';
+        else severity = 'LOW';
+      } else {
+        severity = 'MEDIUM'; // Fallback if CVSS exists but is structurally invalid text
+      }
+    } else if (data.riskScore !== undefined) {
+      if (data.riskScore >= 90) severity = 'CRITICAL';
+      else if (data.riskScore >= 70) severity = 'HIGH';
+      else if (data.riskScore >= 40) severity = 'MEDIUM';
+      else severity = 'LOW';
+    }
+  }
+
   return (
-    <div className="glass p-3 min-w-[180px] group transition-all hover:border-neon/50">
-      <div className="flex justify-between items-start mb-2">
-        <div className={`p-1.5 rounded bg-black/50 border ${data.critical ? 'border-red-500 text-red-500' : 'border-neon text-neon'}`}>
-          <Shield size={14} />
+    <div className={`p-2 rounded border border-white/20 w-[120px] bg-[#0f172a]/90 text-white backdrop-blur shadow flex flex-col items-center justify-center text-center cursor-grab active:cursor-grabbing`}>
+      {/* Target handle for Grid layout */}
+      <Handle type="target" position={Position.Top} className="!bg-white w-1.5 h-1.5" />
+
+      {/* Force rendering of full text dynamically driving node height organically */}
+      <div className="text-[9px] font-bold leading-tight break-words whitespace-pre-wrap uppercase w-full">
+        {data.label || data.id || 'Unknown'}
+      </div>
+
+      {/* Optional rendering based entirely on CVSS rating presence OR direct parsed explicit severities */}
+      {(severity || data.cvss) && (
+        <div className="mt-1 text-[8px] font-mono font-bold tracking-wider uppercase opacity-70">
+          {severity ? severity : `CVSS: ${data.cvss}`}
         </div>
-        <div className="text-[10px] font-mono text-muted uppercase">ID: {data.id}</div>
-      </div>
-      
-      <div className="text-xs font-bold text-text mb-1">{data.label}</div>
-      
-      {/* Visual Risk Meter */}
-      <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden mt-2">
-        <div 
-          className={`h-full ${data.critical ? 'bg-red-500 pulse' : 'bg-neon'}`} 
-          style={{ width: `${data.riskScore || 40}%` }} 
-        />
-      </div>
-      
-      <div className="mt-2 flex justify-between items-center text-[9px] font-mono">
-        <span className="text-muted italic">THREAT LEVEL</span>
-        <span className={data.critical ? 'text-red-500' : 'text-neon'}>{data.riskScore}%</span>
-      </div>
+      )}
+
+      {/* Source handle for Grid layout */}
+      <Handle type="source" position={Position.Bottom} className="!bg-white w-1.5 h-1.5" />
     </div>
   );
 }

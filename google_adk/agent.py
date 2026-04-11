@@ -862,7 +862,9 @@ class ScanAgent:
     @staticmethod
     def _is_rate_limited_error(error: Any) -> bool:
         message = str(error).lower()
-        return "429" in message or "rate limit" in message or "quota" in message
+        return any(marker in message for marker in [
+            "429", "rate limit", "quota", "exhausted", "limit reached", "403"
+        ])
 
     def _apply_ai_recommendation_backoff(self, session_id: str) -> None:
         self._ai_recommendation_backoff_until_ts[session_id] = (
