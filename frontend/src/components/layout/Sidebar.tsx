@@ -242,7 +242,7 @@ export default function Sidebar({ sessionId, authToken, currentUser, onLogout, o
       <Scrollable className="flex-1 px-5 py-4 space-y-5 custom-scrollbar">
 
         {/* Target */}
-        <div>
+        <div id="tour-target">
           <label className="flex items-center gap-1.5 text-[10px] text-slate-400 uppercase tracking-widest mb-1.5">
             <Target size={11} className="text-cyan-400" /> Target
           </label>
@@ -275,7 +275,7 @@ export default function Sidebar({ sessionId, authToken, currentUser, onLogout, o
         </div>
 
         {/* Modules */}
-        <div>
+        <div id="tour-modules">
           <p className="text-[10px] text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
             <Shield size={11} className="text-cyan-400" /> Modules
           </p>
@@ -362,7 +362,7 @@ export default function Sidebar({ sessionId, authToken, currentUser, onLogout, o
       </Scrollable>
 
       {/* Footer actions */}
-      <div className="px-5 py-4 space-y-2 border-t border-indigo-500/15 flex-shrink-0">
+      <div id="tour-actions" className="px-5 py-4 space-y-2 border-t border-indigo-500/15 flex-shrink-0">
         {actionMessage && (
           <div className="text-[9px] rounded border border-indigo-500/25 bg-indigo-500/10 px-2 py-1 text-cyan-300/90">
             {actionMessage}

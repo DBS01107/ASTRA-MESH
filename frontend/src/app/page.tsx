@@ -6,6 +6,7 @@ import AttackPathGraph from "@/components/dashboard/AttackPathGraph";
 import ExplainPanel from "@/components/dashboard/ExplainPanel";
 import ScanTerminal from "@/components/dashboard/ScanTerminal";
 import Sidebar from "@/components/layout/Sidebar";
+import TourGuide from "@/components/dashboard/TourGuide";
 import { apiUrl } from "@/lib/api";
 import { authHeaders, AuthUser, clearAuthToken, getAuthToken, setAuthToken, withAuth } from "@/lib/auth";
 import { getClientSessionId, resetClientSessionId, withSession } from "@/lib/session";
@@ -181,7 +182,7 @@ export default function Home() {
       {/* Main content */}
       <main className="flex-1 flex flex-col gap-2 overflow-hidden min-w-0 px-1">
         {/* Topbar */}
-        <header className="h-10 glass flex items-center justify-between px-5 border-b border-indigo-500/20 flex-shrink-0">
+        <header id="tour-topbar" className="h-10 glass flex items-center justify-between px-5 border-b border-indigo-500/20 flex-shrink-0">
           <div className="flex items-center gap-2">
             <div className="h-2 w-2 bg-cyan-400 rounded-full shadow-[0_0_8px_#22d3ee] animate-pulse" />
             <span className="text-[10px] font-black tracking-widest text-white uppercase">ASTRA_OS // SOC_COMMAND</span>
@@ -194,12 +195,14 @@ export default function Home() {
         {/* Graph + Terminal */}
         <div className="flex-1 flex flex-col gap-2 overflow-hidden min-h-0">
           {/* Attack graph — takes remaining space */}
-          <div className="flex-1 glass relative overflow-hidden bg-black/40 scanline min-h-0">
+          <div id="tour-graph" className="flex-1 glass relative overflow-hidden bg-black/40 scanline min-h-0">
             <AttackPathGraph initialData={graph} />
           </div>
 
           {/* Terminal — collapsible, sits below graph */}
-          <ScanTerminal logs={logs} />
+          <div id="tour-terminal">
+            <ScanTerminal logs={logs} />
+          </div>
         </div>
       </main>
 
@@ -224,6 +227,8 @@ export default function Home() {
         onCollapse={setExplainCollapsed}
         width={explainWidth}
       />
+
+      <TourGuide currentUser={currentUser} />
     </div>
   );
 }
