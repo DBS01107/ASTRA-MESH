@@ -437,6 +437,65 @@ def parse_nikto_txt(file_path: str, target_context: Optional[str] = None) -> Lis
 
 
 # --------------------------------------------------------------------
+# 5b. SSLyze Parser
+# --------------------------------------------------------------------
+def parse_sslyze_json(file_path: str, target_context: Optional[str] = None) -> List[StandardFinding]:
+    findings = []
+    if not os.path.exists(file_path):
+        return findings
+    try:
+        with open(file_path, "r") as f:
+            data = json.load(f)
+        for result in data.get("server_scan_results", []):
+            server_info = result.get("server_location", {})
+            host = server_info.get("hostname") or server_info.get("ip_address", target_context or "")
+            port = server_info.get("port", 443)
+            tgt = f"{host}:{port}"
+            scan_result = result.get("scan_result") or {}
+
+            # Weak/deprecated protocol support
+            for proto in ("ssl_2_0_cipher_suites", "ssl_3_0_cipher_suites", "tls_1_0_cipher_suites", "tls_1_1_cipher_suites"):
+                proto_result = scan_result.get(proto, {}) or {}
+                accepted = (proto_result.get("result") or {}).get("accepted_cipher_suites", [])
+                if accepted:
+                    label = proto.replace("_cipher_suites", "").replace("_", ".").upper()
+                    findings.append(StandardFinding(
+                        id=f"sslyze_weak_proto_{tgt}_{proto}",
+                        source_tool="sslyze",
+                        target=tgt,
+                        finding_type="tls_weakness",
+                        finding_value=f"weak_protocol_{label}",
+                        severity="high",
+                        risk_level="misconfig",
+                        capability="weak_tls_protocol",
+                        details={"protocol": label, "accepted_suites": len(accepted)},
+                    ))
+
+            # Certificate issues
+            cert_info = (scan_result.get("certificate_info") or {}).get("result") or {}
+            for deployment in cert_info.get("certificate_deployments", []):
+                leaf = (deployment.get("received_certificate_chain") or [{}])[0]
+                subject = (leaf.get("subject") or {}).get("rfc4514_string", "")
+                not_valid_after = leaf.get("not_valid_after", "")
+                verified = deployment.get("verified_certificate_chain") is not None
+                if not verified:
+                    findings.append(StandardFinding(
+                        id=f"sslyze_cert_unverified_{tgt}",
+                        source_tool="sslyze",
+                        target=tgt,
+                        finding_type="tls_weakness",
+                        finding_value="certificate_not_trusted",
+                        severity="medium",
+                        risk_level="misconfig",
+                        capability="untrusted_certificate",
+                        details={"subject": subject, "not_valid_after": not_valid_after},
+                    ))
+    except (json.JSONDecodeError, IOError, KeyError) as e:
+        print(f"[!] Error parsing SSLyze JSON file {file_path}: {e}")
+    return findings
+
+
+# --------------------------------------------------------------------
 # 6. Enum4Linux Parser
 # --------------------------------------------------------------------
 def parse_enum4linux(file_path: str, target_context: Optional[str] = None) -> List[StandardFinding]:
@@ -483,6 +542,7 @@ PARSER_MAPPING: Dict[str, Callable] = {
     "nikto": parse_nikto_txt,
     "vulners": parse_nmap_xml,
     "enum4linux": parse_enum4linux,
+    "sslyze": parse_sslyze_json,
 }
 
 def get_parser_for_tool(tool_name: str) -> Optional[Callable]:

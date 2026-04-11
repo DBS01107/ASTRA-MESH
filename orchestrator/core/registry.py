@@ -63,16 +63,6 @@ SCANNERS = [
         "enabled": True, "requires_url": False, "mode": "active", "depends_on": ["nmap"]
     },
     {
-        "name": "wpscan",
-        "cmd_template": "wpscan --url {scan_target} --no-banner --disable-tls-checks --format json -o orchestrator/output/raw/{file_target}_wpscan.json",
-        "enabled": True, "requires_url": True, "mode": "active", "depends_on": ["whatweb"]
-    },
-    {
-        "name": "joomscan",
-        "cmd_template": "joomscan --url {scan_target} --output orchestrator/output/raw/{file_target}_joomscan.txt",
-        "enabled": True, "requires_url": True, "mode": "active", "depends_on": ["whatweb"]
-    },
-    {
         "name": "sqlmap",
         "cmd_template": "sqlmap -u {scan_target} --batch --output-dir= orchestrator/output/raw/{file_target}_sqlmap --risk=2 --level=2",
         "enabled": True, "requires_url": True, "mode": "active", "depends_on": ["nuclei"] # Or other discovery tool
@@ -81,25 +71,11 @@ SCANNERS = [
     # --------------------------------------------------------------------
     # OTHER AVAILABLE TOOLS (Can be enabled manually)
     # --------------------------------------------------------------------
-    {
-        "name": "dirb",
-        "cmd_template": "dirb {scan_target} /usr/share/wordlists/dirb/common.txt -o orchestrator/output/raw/{file_target}_dirb.txt",
-        "enabled": True, "requires_url": True, "mode": "active", "depends_on": ["nmap"]
-    },
-    {
-        "name": "ffuf",
-        "cmd_template": "ffuf -u {scan_target}/FUZZ -w /usr/share/wordlists/dirb/common.txt -o orchestrator/output/raw/{file_target}_ffuf.json -of json",
-        "enabled": True, "requires_url": True, "mode": "active", "depends_on": ["nmap"]
-    },
-    {
-        "name": "nikto",
-        "cmd_template": "nikto -h {scan_target} -o orchestrator/output/raw/{file_target}_nikto.txt",
-        "enabled": True, "requires_url": True, "mode": "active", "depends_on": ["nmap"]
-    },
+   
     {
         "name": "sslyze",
         "cmd_template": "sslyze --json_out=orchestrator/output/raw/{file_target}_sslyze.json {scan_target}",
-        "enabled": True, "requires_url": True, "mode": "active", "depends_on": ["nmap"]
+        "enabled": True, "requires_url": False, "requires_tls_ports": True, "mode": "active", "depends_on": ["nmap"]
     },
     {
         "name": "wapiti",
@@ -128,12 +104,7 @@ SCANNERS = [
             "nmap-ftp-scripts",
             "nmap-smb-scripts",
             "enum4linux",
-            "wpscan",
-            "joomscan",
             "sqlmap",
-            "dirb",
-            "ffuf",
-            "nikto",
             "sslyze",
             "wapiti",
             "skipfish",
@@ -150,15 +121,10 @@ TOOL_BINARIES = {
     'nmap-ftp-scripts': 'nmap',
     'nmap-smb-scripts': 'nmap',
     'whatweb': 'whatweb',
-    'dirb': 'dirb',
-    'nikto': 'nikto',
     'nuclei': 'nuclei',
-    'wpscan': 'wpscan',
-    'joomscan': 'joomscan',
     'sslyze': 'sslyze',
     'sqlmap': 'sqlmap',
     'enum4linux': 'enum4linux',
-    'ffuf': 'ffuf',
     'wapiti': 'wapiti',
     'skipfish': 'skipfish',
     'searchsploit': 'searchsploit',

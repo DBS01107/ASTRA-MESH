@@ -11,23 +11,22 @@ RUN apt-get update && apt-get install -y \
     nmap \
     whatweb \
     nuclei \
-    nikto \
-    wpscan \
     sqlmap \
     enum4linux \
     exploitdb \
-    wfuzz \
     git \
     curl \
     wget \
+    sslyze \
+    wapiti \
+    skipfish \
     && rm -rf /var/lib/apt/lists/*
 
-# Validate Nikto and SearchSploit at build-time so runtime scans do not depend on on-demand installation.
-RUN command -v nikto && command -v searchsploit
+# Validate SearchSploit at build-time so runtime scans do not depend on on-demand installation.
+RUN command -v searchsploit
 
-# Install JoomScan manually
-RUN git clone https://github.com/OWASP/joomscan.git /opt/joomscan && \
-    ln -s /opt/joomscan/joomscan.pl /usr/local/bin/joomscan
+
+
 
 # Set up Python Environment
 WORKDIR /app
@@ -51,6 +50,8 @@ RUN pip install --no-cache-dir "numpy>=1.24.0,<2.3"
 # Install remaining dependencies
 RUN pip install --no-cache-dir -r requirements.txt || \
     (pip install --no-cache-dir --no-build-isolation -r requirements.txt)
+
+RUN nuclei -update-templates
 
 # Copy Codebase
 COPY . .

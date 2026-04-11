@@ -330,7 +330,33 @@ def _execute_group(
 
         dynamic_flags = options_by_tool.get(tool_name, {}).get("flags")
 
-        if scanner_config.get("requires_url"):
+        if scanner_config.get("requires_tls_ports"):
+            # Build targets from ALL open ports discovered by nmap, not just web_service findings.
+            # This catches TLS on non-standard ports (e.g. 8444, 9443, custom HTTPS).
+            _TLS_PORTS = {443, 8443, 4443, 9443, 8444}
+            _TLS_SERVICES = {"https", "ssl", "tls"}
+            port_targets = set()
+            for f in master_findings:
+                if f.finding_type != "open_port":
+                    continue
+                port = getattr(f, "port", None)
+                service = (getattr(f, "service", "") or "").lower()
+                if port in _TLS_PORTS or any(s in service for s in _TLS_SERVICES):
+                    port_targets.add(f"{f.target}:{port}")
+            # Fallback: if nmap hasn't run yet, try the standard HTTPS port
+            if not port_targets:
+                port_targets = {f"{target}:443"}
+            for port_target in port_targets:
+                output_file = utils.get_output_filepath(scanner_config, port_target, target)
+                cmd_args = utils.command_builder(
+                    scanner_config,
+                    port_target,
+                    target,
+                    output_file,
+                    dynamic_flags=dynamic_flags,
+                )
+                tasks_to_run.append({'tool': tool_name, 'cmd': cmd_args, 'url': port_target, 'file': output_file})
+        elif scanner_config.get("requires_url"):
             # Find web service URLs from all findings so far
             web_targets = {f.target for f in master_findings if f.finding_type == "web_service"}
             # Fallback if no web services have been found yet
