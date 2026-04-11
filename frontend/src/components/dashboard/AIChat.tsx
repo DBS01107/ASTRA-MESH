@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from 'react';
 import { Send, Terminal, Loader2, Bot } from 'lucide-react';
+import Scrollable from "@/components/ui/Scrollable";
 import { apiUrl } from "@/lib/api";
 import { authHeaders } from "@/lib/auth";
 
@@ -11,11 +12,18 @@ interface AIChatProps {
 }
 
 export default function AIChat({ logs = [], sessionId, authToken }: AIChatProps) {
+    const chatRef = React.useRef<HTMLDivElement>(null);
     const [messages, setMessages] = useState<{ role: 'user' | 'assistant', content: string }[]>([
         { role: 'assistant', content: "I'm monitoring the scan logs. Ask me anything about the findings." }
     ]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
+
+    React.useEffect(() => {
+        if (chatRef.current) {
+            chatRef.current.scrollTop = chatRef.current.scrollHeight;
+        }
+    }, [messages]);
 
     const handleSend = async () => {
         if (!input.trim() || loading) return;
@@ -57,7 +65,10 @@ export default function AIChat({ logs = [], sessionId, authToken }: AIChatProps)
     return (
         <div className="flex flex-col h-[calc(100vh-12rem)] max-h-[500px]">
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto space-y-3 p-2 font-mono text-xs">
+            <Scrollable 
+                containerRef={chatRef}
+                className="flex-1 space-y-3 p-2 font-mono text-xs"
+            >
                 {messages.map((msg, idx) => (
                     <div key={idx} className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                         {msg.role === 'assistant' && <Bot size={14} className="text-[#22d3ee] mt-1 shrink-0" />}
@@ -75,7 +86,7 @@ export default function AIChat({ logs = [], sessionId, authToken }: AIChatProps)
                         <span className="text-gray-500 italic">Analyzing...</span>
                     </div>
                 )}
-            </div>
+            </Scrollable>
 
             {/* Input Area */}
             <div className="mt-2 flex gap-2 border-t border-white/10 pt-2">

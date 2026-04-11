@@ -101,24 +101,18 @@ export default function AuthPanel({ onAuthenticated }: AuthPanelProps) {
             <div className="flex mb-3 border border-[#22d3ee]/20">
               <button
                 onClick={() => setMode("login")}
-                className={`flex-1 py-2 text-[10px] uppercase tracking-[0.2em] font-bold ${
-                  mode === "login"
                 className={`flex-1 py-2 text-[10px] uppercase tracking-[0.2em] font-bold ${mode === "login"
                     ? "bg-[#22d3ee] text-black"
                     : "text-[#22d3ee]/80 hover:bg-[#22d3ee]/10"
-                }`}
                   }`}
               >
                 Login
               </button>
               <button
                 onClick={() => setMode("register")}
-                className={`flex-1 py-2 text-[10px] uppercase tracking-[0.2em] font-bold ${
-                  mode === "register"
                 className={`flex-1 py-2 text-[10px] uppercase tracking-[0.2em] font-bold ${mode === "register"
                     ? "bg-[#22d3ee] text-black"
                     : "text-[#22d3ee]/80 hover:bg-[#22d3ee]/10"
-                }`}
                   }`}
               >
                 Register
@@ -179,10 +173,8 @@ export default function AuthPanel({ onAuthenticated }: AuthPanelProps) {
               <button
                 onClick={submit}
                 disabled={loading}
-                className={`w-full border border-[#22d3ee] py-3 text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-[#22d3ee] hover:text-black transition-all ${
-                  loading ? "opacity-60 cursor-not-allowed" : "pulse-glow"
-                }`}
                 className={`w-full border border-[#22d3ee] py-3 text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-[#22d3ee] hover:text-black transition-all ${loading ? "opacity-60 cursor-not-allowed" : "pulse-glow"
+                  }`}
               >
                 {loading ? "Authenticating..." : mode === "login" ? "Login" : "Create Account"}
               </button>
