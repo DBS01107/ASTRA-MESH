@@ -5,7 +5,7 @@ import { authHeaders, AuthUser } from "@/lib/auth";
 import { withSession } from "@/lib/session";
 import {
   ChevronLeft, ChevronRight, Target, Cpu, Shield,
-  BarChart2, Download, LogOut, User, Layers, Square, Power
+  BarChart2, Download, LogOut, User, Layers, Square, Power, HelpCircle
 } from "lucide-react";
 import Scrollable from "@/components/ui/Scrollable";
 
@@ -22,10 +22,11 @@ interface SidebarProps {
   onCollapse?: (collapsed: boolean) => void;
   width?: number;
   onSessionTerminated?: () => void;
+  onShowGuide?: () => void;
 }
 interface ScanSummary { session_id: string; target: string; status: string; finding_count: number; updated_at?: string; }
 
-export default function Sidebar({ sessionId, authToken, currentUser, onLogout, onCollapse, width = 320, onSessionTerminated }: SidebarProps) {
+export default function Sidebar({ sessionId, authToken, currentUser, onLogout, onCollapse, width = 320, onSessionTerminated, onShowGuide }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [target, setTarget] = useState("");
   const [mode, setMode] = useState("dynamic");
@@ -216,6 +217,7 @@ export default function Sidebar({ sessionId, authToken, currentUser, onLogout, o
           <Power size={15} />
         </button>
         <button onClick={handleDownloadReport} title="Download Report" disabled={reportLoading} className="p-2 rounded hover:bg-emerald-500/20 text-emerald-400/70 hover:text-emerald-400 transition-colors"><Download size={15} /></button>
+        <button onClick={onShowGuide} title="Handbook / Guide" className="p-2 rounded hover:bg-cyan-500/20 text-cyan-400/70 hover:text-cyan-400 transition-colors"><HelpCircle size={15} /></button>
         <button onClick={onLogout} title="Logout" className="p-2 rounded hover:bg-rose-500/20 text-rose-400/70 hover:text-rose-400 transition-colors"><LogOut size={15} /></button>
       </div>
     );
@@ -233,16 +235,21 @@ export default function Sidebar({ sessionId, authToken, currentUser, onLogout, o
           <Layers size={14} className="text-cyan-400" />
           <span className="text-[10px] font-black tracking-widest text-cyan-400 uppercase">ASTRA // CONFIG</span>
         </div>
-        <button onClick={toggle} className="p-1 rounded hover:bg-indigo-500/20 text-slate-400 hover:text-cyan-400 transition-colors">
-          <ChevronLeft size={15} />
-        </button>
+        <div className="flex items-center gap-1">
+          <button onClick={onShowGuide} title="Handbook / Guide" className="p-1 rounded hover:bg-cyan-500/20 text-cyan-400/70 hover:text-cyan-400 transition-colors">
+            <HelpCircle size={15} />
+          </button>
+          <button onClick={toggle} title="Collapse Sidebar" className="p-1 rounded hover:bg-indigo-500/20 text-slate-400 hover:text-cyan-400 transition-colors">
+            <ChevronLeft size={15} />
+          </button>
+        </div>
       </div>
 
       {/* Scrollable body */}
       <Scrollable className="flex-1 px-5 py-4 space-y-5 custom-scrollbar">
 
         {/* Target */}
-        <div>
+        <div className="tour-target">
           <label className="flex items-center gap-1.5 text-[10px] text-slate-400 uppercase tracking-widest mb-1.5">
             <Target size={11} className="text-cyan-400" /> Target
           </label>
@@ -255,7 +262,7 @@ export default function Sidebar({ sessionId, authToken, currentUser, onLogout, o
         </div>
 
         {/* Mode */}
-        <div>
+        <div className="tour-mode">
           <p className="text-[10px] text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
             <Cpu size={11} className="text-cyan-400" /> Mode
           </p>
@@ -275,7 +282,7 @@ export default function Sidebar({ sessionId, authToken, currentUser, onLogout, o
         </div>
 
         {/* Modules */}
-        <div>
+        <div className="tour-modules">
           <p className="text-[10px] text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
             <Shield size={11} className="text-cyan-400" /> Modules
           </p>

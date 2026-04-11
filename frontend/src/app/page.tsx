@@ -9,6 +9,8 @@ import Sidebar from "@/components/layout/Sidebar";
 import { apiUrl } from "@/lib/api";
 import { authHeaders, AuthUser, clearAuthToken, getAuthToken, setAuthToken, withAuth } from "@/lib/auth";
 import { getClientSessionId, resetClientSessionId, withSession } from "@/lib/session";
+import TourGuide from "@/components/ui/TourGuide";
+import GuideModal from "@/components/ui/GuideModal";
 
 export default function Home() {
   const [graph, setGraph] = useState<any>({ nodes: [], edges: [] });
@@ -24,6 +26,8 @@ export default function Home() {
   const [sidebarWidth, setSidebarWidth] = useState(320);
   const [explainWidth, setExplainWidth] = useState(320);
   const [resizingSide, setResizingSide] = useState<"left" | "right" | null>(null);
+  const [runTour, setRunTour] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
 
   useEffect(() => {
     const bootstrapAuth = async () => {
@@ -134,6 +138,14 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [sessionId, authToken]);
 
+  useEffect(() => {
+    if (!currentUser || !authToken) return;
+    const seen = localStorage.getItem("astra_tour_seen");
+    if (!seen) {
+      setRunTour(true);
+    }
+  }, [currentUser, authToken]);
+
   if (authLoading) {
     return (
       <div className="h-screen w-screen bg-[#02030a] flex items-center justify-center font-mono">
@@ -163,6 +175,7 @@ export default function Home() {
         onCollapse={setSidebarCollapsed}
         width={sidebarWidth}
         onSessionTerminated={handleSessionTerminated}
+        onShowGuide={() => setShowGuide(true)}
       />
 
       {!sidebarCollapsed && (
@@ -194,7 +207,7 @@ export default function Home() {
         {/* Graph + Terminal */}
         <div className="flex-1 flex flex-col gap-2 overflow-hidden min-h-0">
           {/* Attack graph — takes remaining space */}
-          <div className="flex-1 glass relative overflow-hidden bg-black/40 scanline min-h-0">
+          <div className="tour-graph flex-1 glass relative overflow-hidden bg-black/40 scanline min-h-0">
             <AttackPathGraph initialData={graph} />
           </div>
 
@@ -217,13 +230,29 @@ export default function Home() {
       )}
 
       {/* Right panel */}
-      <ExplainPanel
-        logs={logs}
-        sessionId={sessionId}
-        authToken={authToken}
-        onCollapse={setExplainCollapsed}
-        width={explainWidth}
+      <div className="tour-ai h-full flex-shrink-0">
+        <ExplainPanel
+          logs={logs}
+          sessionId={sessionId}
+          authToken={authToken}
+          onCollapse={setExplainCollapsed}
+          width={explainWidth}
+        />
+      </div>
+
+      <TourGuide
+        run={runTour}
+        onFinish={() => {
+          setRunTour(false);
+          localStorage.setItem("astra_tour_seen", "true");
+        }}
       />
+
+      {showGuide && (
+        <GuideModal 
+          onClose={() => setShowGuide(false)} 
+        />
+      )}
     </div>
   );
 }
