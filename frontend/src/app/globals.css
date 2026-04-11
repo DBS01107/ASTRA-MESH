@@ -1,4 +1,12 @@
 @import "tailwindcss";
+
+@font-face {
+  font-family: 'SairaStencil';
+  src: url('/SairaStencil-VariableFont.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
 @import "perfect-scrollbar/css/perfect-scrollbar.css";
 
 :root {
@@ -12,7 +20,7 @@ body {
   background-color: var(--bg);
   color: #eaeaf0;
   overflow: hidden;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'SairaStencil', ui-sans-serif, system-ui, sans-serif;
 }
 
 .cyber-grid {
@@ -77,7 +85,7 @@ html, body {
     radial-gradient(600px circle at 90% 10%, rgba(34,211,238,0.25), transparent 40%),
     linear-gradient(180deg, #02030a, #05060b);
   color: var(--text);
-  font-family: ui-sans-serif, system-ui;
+  font-family: 'SairaStencil', ui-sans-serif, system-ui, sans-serif;
   overflow-x: hidden;
 }
 
@@ -197,4 +205,31 @@ html, body {
   background-size: 40px 40px;
   perspective: 1000px;
   transform-style: preserve-3d;
+}
+
+/* React Flow Custom Controls Theme */
+.react-flow__controls {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+}
+
+.react-flow__controls-button {
+  background: transparent !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text) !important;
+  fill: var(--text) !important;
+  border-radius: 8px !important;
+  backdrop-filter: blur(8px) !important;
+  transition: all 0.2s ease !important;
+}
+
+.react-flow__controls-button:hover {
+  background: rgba(99, 102, 241, 0.2) !important;
+  color: var(--neon) !important;
+  fill: var(--neon) !important;
+  border-color: var(--neon) !important;
 }
