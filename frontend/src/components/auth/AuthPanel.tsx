@@ -25,6 +25,16 @@ const CREATORS = [
     github: "https://github.com/toxicated53",
     linkedin: "https://www.linkedin.com/in/adwait-bangale-330710288/",
   },
+  {
+    name: "Ved Asawa",
+    github: "https://github.com/A-C-I-D",
+    linkedin: "https://www.linkedin.com/in/ved-asawa/",
+  },
+  {
+    name: "Snehal Jagtap",
+    github: "https://github.com/CyberSirenDev",
+    linkedin: "https://www.linkedin.com/in/snehal-jagtap-0293b62b8",
+  }
 ];
 
 export default function AuthPanel({ onAuthenticated }: AuthPanelProps) {
@@ -93,9 +103,11 @@ export default function AuthPanel({ onAuthenticated }: AuthPanelProps) {
                 onClick={() => setMode("login")}
                 className={`flex-1 py-2 text-[10px] uppercase tracking-[0.2em] font-bold ${
                   mode === "login"
+                className={`flex-1 py-2 text-[10px] uppercase tracking-[0.2em] font-bold ${mode === "login"
                     ? "bg-[#22d3ee] text-black"
                     : "text-[#22d3ee]/80 hover:bg-[#22d3ee]/10"
                 }`}
+                  }`}
               >
                 Login
               </button>
@@ -103,9 +115,11 @@ export default function AuthPanel({ onAuthenticated }: AuthPanelProps) {
                 onClick={() => setMode("register")}
                 className={`flex-1 py-2 text-[10px] uppercase tracking-[0.2em] font-bold ${
                   mode === "register"
+                className={`flex-1 py-2 text-[10px] uppercase tracking-[0.2em] font-bold ${mode === "register"
                     ? "bg-[#22d3ee] text-black"
                     : "text-[#22d3ee]/80 hover:bg-[#22d3ee]/10"
                 }`}
+                  }`}
               >
                 Register
               </button>
@@ -168,6 +182,7 @@ export default function AuthPanel({ onAuthenticated }: AuthPanelProps) {
                 className={`w-full border border-[#22d3ee] py-3 text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-[#22d3ee] hover:text-black transition-all ${
                   loading ? "opacity-60 cursor-not-allowed" : "pulse-glow"
                 }`}
+                className={`w-full border border-[#22d3ee] py-3 text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-[#22d3ee] hover:text-black transition-all ${loading ? "opacity-60 cursor-not-allowed" : "pulse-glow"
               >
                 {loading ? "Authenticating..." : mode === "login" ? "Login" : "Create Account"}
               </button>
