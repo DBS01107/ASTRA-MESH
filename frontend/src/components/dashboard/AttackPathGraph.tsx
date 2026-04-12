@@ -25,53 +25,14 @@ const nodeTypes = {
   custom: AssetNode
 };
 
-const dagreGraph = new dagre.graphlib.Graph();
-dagreGraph.setDefaultEdgeLabel(() => ({}));
-
-const nodeWidth = 250;
-const nodeHeight = 80;
-
-const getLayoutedElements = (nodes: any[], edges: any[], direction = 'LR') => {
-  dagreGraph.setGraph({ rankdir: direction });
-
-  nodes.forEach((node) => {
-    dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
-  });
-
-  edges.forEach((edge) => {
-    dagreGraph.setEdge(edge.source, edge.target);
-  });
-
-  dagre.layout(dagreGraph);
-
-  return nodes.map((node) => {
-    const nodeWithPosition = dagreGraph.node(node.id);
-    return {
-      ...node,
-      targetPosition: 'left',
-      sourcePosition: 'right',
-      position: {
-        x: nodeWithPosition.x - nodeWidth / 2,
-        y: nodeWithPosition.y - nodeHeight / 2,
-      },
-    };
-  });
-};
-
 export default function AttackPathGraph({ initialData }: { initialData: any }) {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 
   useEffect(() => {
-    if (initialData && initialData.nodes && initialData.edges) {
-      // First calculate the ideal layout using dagre
-      const layoutedNodes = getLayoutedElements(
-        [...initialData.nodes],
-        [...initialData.edges]
-      );
-
+    if (initialData && initialData.nodes) {
       setNodes((currentNodes) => {
-        return layoutedNodes.map((node: any) => {
+        return initialData.nodes.map((node: any, i: number) => {
           // If the user has manually forcibly dragged a node, we preserve their coordinate overrides!
           const existingNode = currentNodes.find((n: any) => n.id === node.id);
 
@@ -79,7 +40,7 @@ export default function AttackPathGraph({ initialData }: { initialData: any }) {
             ...node,
             type: node.type || node.data?.type || 'asset',
             className: "",
-            position: existingNode ? existingNode.position : node.position,
+            position: existingNode ? existingNode.position : { x: (i % 3) * 250, y: Math.floor(i / 3) * 150 },
             data: {
               ...node.data,
               id: node.id
@@ -88,7 +49,7 @@ export default function AttackPathGraph({ initialData }: { initialData: any }) {
         });
       });
 
-      setEdges(initialData.edges);
+      setEdges(initialData.edges || []);
     }
   }, [initialData, setNodes, setEdges]);
 

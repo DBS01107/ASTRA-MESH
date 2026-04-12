@@ -1,13 +1,9 @@
 "use client";
 
-const logs = [
-  "Port 443 exposed – checking TLS config",
-  "API endpoint leaked via OpenAPI",
-  "Privilege escalation path detected",
-  "Database reachable via lateral movement"
-];
+export default function ActivityFeed({ logs }: { logs: string[] }) {
+  // Show the most recent 12 logs in chronological order (newest at top) organically
+  const recentLogs = [...logs].reverse().slice(0, 12);
 
-export default function ActivityFeed() {
   return (
     <div className="glass p-5 h-[260px] overflow-hidden">
       <h3 className="text-sm font-semibold text-cyan-300 mb-3">
@@ -15,10 +11,12 @@ export default function ActivityFeed() {
       </h3>
 
       <ul className="space-y-2 text-xs text-zinc-300">
-        {logs.map((log, i) => (
+        {recentLogs.length === 0 && <li className="italic text-slate-500">Awaiting scan initialization...</li>}
+        {recentLogs.map((log, i) => (
           <li
             key={i}
-            className="flex items-center gap-2 animate-pulse"
+            className={`flex items-center gap-2 truncate ${i === 0 ? 'animate-pulse text-cyan-400' : ''}`}
+            title={log}
           >
             ▶ {log}
           </li>

@@ -19,6 +19,8 @@ import TourGuide from "@/components/dashboard/TourGuide";
 
 export default function Home() {
   const [graph, setGraph] = useState<any>({ nodes: [], edges: [] });
+  const [riskHistory, setRiskHistory] = useState<{time: string, threat: number}[]>([]);
+  const currentThreatRef = useRef<number>(0);
   const [logs, setLogs] = useState<string[]>([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
 
@@ -139,6 +141,51 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [sessionId, authToken]);
 
+  // Compute total dynamic threat score organically whenever the graph data changes
+  useEffect(() => {
+    if (!graph?.nodes) return;
+    
+    let currentThreat = 0;
+    graph.nodes.forEach((n: any) => {
+      if (n.type === 'vulnerability' || n.type === 'finding' || n.data?.cvss || n.data?.severity) {
+        let risk = n.data?.severity || 'UNKNOWN';
+        const cvss = parseFloat(n.data?.cvss);
+        if (!n.data?.severity && !isNaN(cvss)) {
+          if (cvss >= 9.0) risk = 'CRITICAL';
+          else if (cvss >= 7.0) risk = 'HIGH';
+          else if (cvss >= 4.0) risk = 'MEDIUM';
+          else risk = 'LOW';
+        }
+        
+        const r = risk.toUpperCase();
+        if (r === 'CRITICAL') currentThreat += 100;
+        if (r === 'HIGH') currentThreat += 75;
+        if (r === 'MEDIUM') currentThreat += 30;
+        if (r === 'LOW') currentThreat += 10;
+        if (r === 'UNKNOWN') currentThreat += 5;
+      } else {
+        // Base assets contribute tiny fractional points as attack surface width
+        currentThreat += 1;
+      }
+    });
+
+    currentThreatRef.current = currentThreat;
+  }, [graph]);
+
+  // Constantly sweep the chart like an EKG monitor to animate the graph over time
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date();
+      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+      
+      setRiskHistory(prev => {
+        const next = [...prev, { time: timeStr, threat: currentThreatRef.current }];
+        return next.slice(-30); // Keep last 30 seconds of rolling history
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
 
   if (authLoading) {
     return (
@@ -236,13 +283,13 @@ export default function Home() {
               {/* Dashboard Analytics View */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                 <div className="glass p-4 rounded min-h-[150px]">
-                  <Metrics title="Ingres Risk Delta" color="#22d3ee" />
+                  <Metrics title="Aggregate Threat Horizon" color="#22d3ee" history={riskHistory} />
                 </div>
                 <div className="glass p-4 rounded min-h-[150px]">
-                  <RiskChart />
+                  <RiskChart nodes={graph.nodes || []} />
                 </div>
                 <div className="glass p-4 rounded min-h-[150px]">
-                  <Metrics title="Network Anomalies" color="#f59e0b" />
+                  <Metrics title="Network Anomalies" color="#f59e0b" history={riskHistory} />
                 </div>
               </div>
 
@@ -250,13 +297,13 @@ export default function Home() {
                 <div className="glass p-4 rounded lg:col-span-2 overflow-hidden flex flex-col">
                   <h3 className="text-sm font-semibold text-cyan-300 mb-3 uppercase tracking-widest">Active Findings</h3>
                   <div className="flex-1 overflow-auto ps-custom">
-                    <FindingsTable />
+                    <FindingsTable nodes={graph.nodes || []} />
                   </div>
                 </div>
                 <div className="glass p-4 rounded overflow-hidden flex flex-col">
                   <h3 className="text-sm font-semibold text-cyan-300 mb-3 uppercase tracking-widest">Chron Feed</h3>
                   <div className="flex-1 overflow-auto ps-custom bg-black/20 rounded p-2">
-                    <ActivityFeed />
+                    <ActivityFeed logs={logs} />
                   </div>
                 </div>
               </div>

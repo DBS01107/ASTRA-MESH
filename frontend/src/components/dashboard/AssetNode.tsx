@@ -4,7 +4,7 @@ import { Handle, Position } from 'reactflow';
 export default function AssetNode({ data }: any) {
   // Explicitly map string outputs based on strict CVSS/Ranking payload mappings
   let severity = data.severity;
-  
+
   if (!severity) {
     if (data.cvss !== undefined) {
       const cvssScore = parseFloat(data.cvss);
@@ -24,6 +24,12 @@ export default function AssetNode({ data }: any) {
     }
   }
 
+  // Determine if severity is strictly vital enough to render based on user preference
+  const isSevere = severity?.toUpperCase() === 'CRITICAL' || 
+                   severity?.toUpperCase() === 'HIGH' || 
+                   severity?.toUpperCase() === 'P1' || 
+                   severity?.toUpperCase() === 'P2';
+
   return (
     <div className={`p-2 rounded border border-white/20 w-[120px] bg-[#0f172a]/90 text-white backdrop-blur shadow flex flex-col items-center justify-center text-center cursor-grab active:cursor-grabbing`}>
       {/* Target handle for Grid layout */}
@@ -34,10 +40,10 @@ export default function AssetNode({ data }: any) {
         {data.label || data.id || 'Unknown'}
       </div>
 
-      {/* Optional rendering based entirely on CVSS rating presence OR direct parsed explicit severities */}
-      {(severity || data.cvss) && (
-        <div className="mt-1 text-[8px] font-mono font-bold tracking-wider uppercase opacity-70">
-          {severity ? severity : `CVSS: ${data.cvss}`}
+      {/* Strict rendering only for severe threats or explicitly designated CVSS items */}
+      {(isSevere || data.cvss) && (
+        <div className="mt-1 text-[8px] font-mono font-bold tracking-wider uppercase opacity-70 text-red-400">
+          {isSevere ? severity : `CVSS: ${data.cvss}`}
         </div>
       )}
 

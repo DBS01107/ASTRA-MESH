@@ -384,7 +384,7 @@ async def get_graph(
                 "type": node_type,
                 "data": {
                     "label": data.get("label", node_id),
-                    "severity": data.get("severity"),
+                    "severity": data.get("severity") or data.get("risk_level") or data.get("risk"),
                     "cvss": data.get("cvss") or data.get("cvss_score")
                 }
             }
