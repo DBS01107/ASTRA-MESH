@@ -1,10 +1,12 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import { Terminal, ChevronDown, ChevronUp } from "lucide-react";
 import Scrollable from "@/components/ui/Scrollable";
 
 interface ScanTerminalProps {
   logs: string[];
+  isCollapsed: boolean;
+  onCollapse: (collapsed: boolean) => void;
 }
 
 const LOG_COLORS: { pattern: RegExp; cls: string }[] = [
@@ -22,21 +24,27 @@ function colorLine(log: string): string {
   return "text-emerald-400/90";
 }
 
-export default function ScanTerminal({ logs }: ScanTerminalProps) {
+export default function ScanTerminal({ logs, isCollapsed, onCollapse }: ScanTerminalProps) {
   const terminalRef = useRef<HTMLDivElement>(null);
-  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
-    if (!collapsed && terminalRef.current) {
+    if (!isCollapsed && terminalRef.current) {
       terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
     }
-  }, [logs, collapsed]);
+  }, [logs, isCollapsed]);
 
   return (
-    <div className={`glass flex flex-col h-full overflow-hidden`}>
+    // When collapsed: flex-shrink-0 h-10 (just the header bar, graph fills rest)
+    // When expanded:  flex-1 min-h-0 (takes remaining space below graph)
+    <div
+      id="tour-terminal"
+      className={`glass flex flex-col overflow-hidden transition-all duration-300 ${
+        isCollapsed ? "flex-shrink-0 h-10" : "flex-1 min-h-0"
+      }`}
+    >
       {/* Header — always visible, click to toggle */}
       <button
-        onClick={() => setCollapsed(p => !p)}
+        onClick={() => onCollapse(!isCollapsed)}
         className="flex items-center justify-between px-4 h-10 border-b border-indigo-500/20 hover:bg-indigo-500/10 transition-colors flex-shrink-0 w-full text-left"
       >
         <div className="flex items-center gap-2">
@@ -48,14 +56,14 @@ export default function ScanTerminal({ logs }: ScanTerminalProps) {
             </span>
           )}
         </div>
-        {collapsed
-          ? <ChevronDown size={13} className="text-slate-500" />
-          : <ChevronUp size={13} className="text-slate-500" />
+        {isCollapsed
+          ? <ChevronUp size={13} className="text-slate-500" />
+          : <ChevronDown size={13} className="text-slate-500" />
         }
       </button>
 
       {/* Log body */}
-      {!collapsed && (
+      {!isCollapsed && (
         <Scrollable
           containerRef={terminalRef}
           className="flex-1 p-4 font-mono text-[10px] leading-relaxed bg-black/50 space-y-0.5 min-h-0"

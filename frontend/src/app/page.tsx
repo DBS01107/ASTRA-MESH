@@ -39,6 +39,7 @@ export default function Home() {
 
   // Vertical split between graph and terminal (percentage 0-100)
   const [graphPct, setGraphPct] = useState(65);
+  const [terminalCollapsed, setTerminalCollapsed] = useState(false);
   const isVResizing = useRef(false);
   const vSplitRef = useRef<HTMLDivElement>(null);
 
@@ -262,29 +263,35 @@ export default function Home() {
         <div className="flex-1 flex flex-col gap-2 overflow-hidden min-h-0">
           {viewMode === "graph" ? (
             <>
-              {/* Attack graph — height controlled by vertical split */}
+              {/* Attack graph — flex-1 when terminal is collapsed, fixed % when expanded */}
               <div
                 id="tour-graph"
-                className="glass relative overflow-hidden bg-black/40 scanline flex-shrink-0"
-                style={{ height: `${graphPct}%` }}
+                className={`glass relative overflow-hidden bg-black/40 scanline transition-all duration-300 ${
+                  terminalCollapsed ? "flex-1 min-h-0" : "flex-shrink-0"
+                }`}
+                style={terminalCollapsed ? undefined : { height: `${graphPct}%` }}
               >
                 <AttackPathGraph initialData={graph} onAskAI={handleAskAI} />
               </div>
 
-              {/* Vertical resize handle */}
-              <div
-                ref={vSplitRef}
-                onPointerDown={handleVPointerDown}
-                className="h-2 flex-shrink-0 cursor-row-resize group flex items-center justify-center z-10 relative"
-                title="Resize terminal"
-              >
-                <div className="w-[96%] h-[3px] rounded-full transition-colors bg-indigo-500/25 group-hover:bg-cyan-400/50" />
-              </div>
+              {/* Vertical resize handle — hidden when terminal is collapsed */}
+              {!terminalCollapsed && (
+                <div
+                  ref={vSplitRef}
+                  onPointerDown={handleVPointerDown}
+                  className="h-2 flex-shrink-0 cursor-row-resize group flex items-center justify-center z-10 relative"
+                  title="Resize terminal"
+                >
+                  <div className="w-[96%] h-[3px] rounded-full transition-colors bg-indigo-500/25 group-hover:bg-cyan-400/50" />
+                </div>
+              )}
 
-              {/* Terminal — takes remaining space */}
-              <div id="tour-terminal" className="flex-1 min-h-0 overflow-hidden">
-                <ScanTerminal logs={logs} />
-              </div>
+              {/* Terminal — controlled collapse lifted to page level */}
+              <ScanTerminal
+                logs={logs}
+                isCollapsed={terminalCollapsed}
+                onCollapse={setTerminalCollapsed}
+              />
             </>
           ) : (
             <div className="flex-1 flex flex-col gap-2 p-2 overflow-auto ps-custom">
