@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import AuthPanel from "@/components/auth/AuthPanel";
 import AttackPathGraph from "@/components/dashboard/AttackPathGraph";
 import ExplainPanel from "@/components/dashboard/ExplainPanel";
@@ -29,6 +29,36 @@ export default function Home() {
   const [viewMode, setViewMode] = useState<"graph" | "dashboard">("graph");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [explainCollapsed, setExplainCollapsed] = useState(false);
+
+  // Vertical split between graph and terminal (percentage 0-100)
+  const [graphPct, setGraphPct] = useState(65);
+  const isVResizing = useRef(false);
+  const vSplitRef = useRef<HTMLDivElement>(null);
+
+  const handleVPointerDown = useCallback((e: React.PointerEvent) => {
+    e.preventDefault();
+    isVResizing.current = true;
+    document.body.style.userSelect = "none";
+    document.body.style.cursor = "row-resize";
+
+    const onMove = (ev: PointerEvent) => {
+      if (!isVResizing.current || !vSplitRef.current) return;
+      const container = vSplitRef.current.parentElement;
+      if (!container) return;
+      const rect = container.getBoundingClientRect();
+      const pct = Math.min(85, Math.max(20, ((ev.clientY - rect.top) / rect.height) * 100));
+      setGraphPct(pct);
+    };
+    const onUp = () => {
+      isVResizing.current = false;
+      document.body.style.userSelect = "";
+      document.body.style.cursor = "";
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+  }, []);
 
   useEffect(() => {
     const bootstrapAuth = async () => {
@@ -151,16 +181,16 @@ export default function Home() {
               <div className="h-2 w-2 bg-cyan-400 rounded-full shadow-[0_0_8px_#22d3ee] animate-pulse" />
               <span className="text-[10px] font-black tracking-widest text-white uppercase">ASTRA_OS // SOC_COMMAND</span>
             </div>
-            
+
             {/* View Toggles */}
             <div className="flex items-center bg-black/40 border border-cyan-500/20 rounded p-0.5 ml-4">
-              <button 
+              <button
                 onClick={() => setViewMode("graph")}
                 className={`px-3 py-1 text-[10px] font-bold tracking-widest uppercase rounded transition-colors ${viewMode === "graph" ? "bg-cyan-500/20 text-cyan-300" : "text-slate-400 hover:text-white"}`}
               >
                 Graph Trace
               </button>
-              <button 
+              <button
                 onClick={() => setViewMode("dashboard")}
                 className={`px-3 py-1 text-[10px] font-bold tracking-widest uppercase rounded transition-colors ${viewMode === "dashboard" ? "bg-cyan-500/20 text-cyan-300" : "text-slate-400 hover:text-white"}`}
               >
@@ -177,13 +207,27 @@ export default function Home() {
         <div className="flex-1 flex flex-col gap-2 overflow-hidden min-h-0">
           {viewMode === "graph" ? (
             <>
-              {/* Attack graph — takes remaining space */}
-              <div id="tour-graph" className="flex-1 glass relative overflow-hidden bg-black/40 scanline min-h-0">
+              {/* Attack graph — height controlled by vertical split */}
+              <div
+                id="tour-graph"
+                className="glass relative overflow-hidden bg-black/40 scanline flex-shrink-0"
+                style={{ height: `${graphPct}%` }}
+              >
                 <AttackPathGraph initialData={graph} />
               </div>
 
-              {/* Terminal — collapsible, sits below graph */}
-              <div id="tour-terminal">
+              {/* Vertical resize handle */}
+              <div
+                ref={vSplitRef}
+                onPointerDown={handleVPointerDown}
+                className="h-2 flex-shrink-0 cursor-row-resize group flex items-center justify-center z-10 relative"
+                title="Resize terminal"
+              >
+                <div className="w-[96%] h-[3px] rounded-full transition-colors bg-indigo-500/25 group-hover:bg-cyan-400/50" />
+              </div>
+
+              {/* Terminal — takes remaining space */}
+              <div id="tour-terminal" className="flex-1 min-h-0 overflow-hidden">
                 <ScanTerminal logs={logs} />
               </div>
             </>
@@ -201,7 +245,7 @@ export default function Home() {
                   <Metrics title="Network Anomalies" color="#f59e0b" />
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 flex-1 min-h-[300px]">
                 <div className="glass p-4 rounded lg:col-span-2 overflow-hidden flex flex-col">
                   <h3 className="text-sm font-semibold text-cyan-300 mb-3 uppercase tracking-widest">Active Findings</h3>

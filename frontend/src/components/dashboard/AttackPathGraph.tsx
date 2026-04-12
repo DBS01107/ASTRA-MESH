@@ -66,7 +66,7 @@ export default function AttackPathGraph({ initialData }: { initialData: any }) {
     if (initialData && initialData.nodes && initialData.edges) {
       // First calculate the ideal layout using dagre
       const layoutedNodes = getLayoutedElements(
-        [...initialData.nodes], 
+        [...initialData.nodes],
         [...initialData.edges]
       );
 
@@ -74,7 +74,7 @@ export default function AttackPathGraph({ initialData }: { initialData: any }) {
         return layoutedNodes.map((node: any) => {
           // If the user has manually forcibly dragged a node, we preserve their coordinate overrides!
           const existingNode = currentNodes.find((n: any) => n.id === node.id);
-          
+
           return {
             ...node,
             type: node.type || node.data?.type || 'asset',

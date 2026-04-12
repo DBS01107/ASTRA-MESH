@@ -130,14 +130,14 @@ export default function TourGuide({ currentUser }: TourProps) {
             <h2 className="text-2xl font-bold text-cyan-400 font-['SairaStencil'] tracking-widest uppercase">Astra Mesh</h2>
             <p className="text-xs text-slate-300">Would you like a quick walkthrough of the SOC Command capabilities?</p>
             <div className="flex gap-4 mt-2">
-              <button 
-                onClick={handleStartTour} 
+              <button
+                onClick={handleStartTour}
                 className="px-6 py-2 bg-cyan-500/20 text-cyan-300 border border-cyan-400/50 rounded hover:bg-cyan-500/40 uppercase text-xs font-bold tracking-widest transition-all"
               >
                 Start Tour
               </button>
-              <button 
-                onClick={handleSkipTour} 
+              <button
+                onClick={handleSkipTour}
                 className="px-6 py-2 bg-transparent text-slate-400 hover:text-rose-400 uppercase text-[10px] font-bold tracking-widest transition-all"
               >
                 Skip

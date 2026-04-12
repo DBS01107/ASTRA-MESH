@@ -33,7 +33,7 @@ export default function ScanTerminal({ logs }: ScanTerminalProps) {
   }, [logs, collapsed]);
 
   return (
-    <div className={`glass flex flex-col transition-all duration-300 ${collapsed ? "h-10" : "flex-1"} overflow-hidden`}>
+    <div className={`glass flex flex-col h-full overflow-hidden`}>
       {/* Header — always visible, click to toggle */}
       <button
         onClick={() => setCollapsed(p => !p)}
@@ -58,7 +58,8 @@ export default function ScanTerminal({ logs }: ScanTerminalProps) {
       {!collapsed && (
         <Scrollable
           containerRef={terminalRef}
-          className="flex-1 p-4 font-mono text-[10px] leading-relaxed bg-black/50 space-y-0.5"
+          className="flex-1 p-4 font-mono text-[10px] leading-relaxed bg-black/50 space-y-0.5 min-h-0"
+          options={{ wheelSpeed: 1, wheelPropagation: true, minScrollbarLength: 20, suppressScrollX: true }}
         >
           {logs.length === 0 ? (
             <div className="text-slate-600 italic">Waiting for scan to start...</div>

@@ -70,7 +70,7 @@ export default function ResizablePane({
           <div className={`h-[96%] w-[3px] rounded-full transition-colors ${isResizing ? "bg-cyan-400/80" : "bg-indigo-500/25 group-hover:bg-cyan-400/50"}`} />
         </div>
       )}
-      
+
       <div className="h-full w-full flex-1">
         {React.cloneElement(children as React.ReactElement, { width: isCollapsed ? undefined : width } as any)}
       </div>
