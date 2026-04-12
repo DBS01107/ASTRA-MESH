@@ -16,6 +16,7 @@ import { authHeaders, AuthUser, clearAuthToken, getAuthToken, setAuthToken, with
 import { getClientSessionId, resetClientSessionId, withSession } from "@/lib/session";
 import ResizablePane from "@/components/ui/ResizablePane";
 import TourGuide from "@/components/dashboard/TourGuide";
+import GuideModal from "@/components/dashboard/GuideModal";
 import { useToast } from "@/components/ui/Toast";
 
 export default function Home() {
@@ -39,6 +40,9 @@ export default function Home() {
   // AI pre-fill from graph node → chat
   const [pendingAIMessage, setPendingAIMessage] = useState<string | null>(null);
   const handleAskAI = useCallback((ctx: string) => setPendingAIMessage(ctx), []);
+
+  const [showGuide, setShowGuide] = useState(false);
+  const [runTour, setRunTour] = useState(false);
 
   // Vertical split between graph and terminal (percentage 0-100)
   const [graphPct, setGraphPct] = useState(65);
@@ -120,6 +124,17 @@ export default function Home() {
     resetClientSessionId();
     toast("Logged out successfully.", "info");
   };
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && currentUser?.username) {
+      const tourKey = `astra_tour_completed_${currentUser.username}`;
+      const hasSeen = localStorage.getItem(tourKey);
+
+      if (!hasSeen) {
+        setTimeout(() => setShowGuide(true), 1500);
+      }
+    }
+  }, [currentUser]);
 
   const handleSessionTerminated = () => {
     setLogs([]);
@@ -292,7 +307,7 @@ export default function Home() {
               {/* Attack graph — switches to flex-1 (expanding downwards) when terminal is collapsed */}
               <div
                 id="tour-graph"
-                className={`glass relative overflow-hidden bg-black/40 scanline transition-all duration-300 ${
+                className={`tour-graph glass relative overflow-hidden bg-black/40 scanline transition-all duration-300 ${
                   terminalCollapsed ? "flex-1 min-h-0" : "flex-shrink-0"
                 }`}
                 style={{ height: terminalCollapsed ? 'auto' : `${graphPct}%` }}
@@ -365,7 +380,6 @@ export default function Home() {
         </div>
       </main>
 
-      {/* Right panel */}
       <ResizablePane minWidth={240} maxWidth={420} initialWidth={320} side="right" isCollapsed={explainCollapsed}>
         <ExplainPanel
           logs={logs}
@@ -377,7 +391,18 @@ export default function Home() {
         />
       </ResizablePane>
 
-      <TourGuide currentUser={currentUser} />
+      {showGuide && (
+        <GuideModal onClose={() => { setShowGuide(false); setRunTour(true); }} />
+      )}
+      <TourGuide 
+        run={runTour} 
+        onFinish={() => { 
+          setRunTour(false); 
+          if(currentUser) {
+            localStorage.setItem(`astra_tour_completed_${currentUser.username}`, "true");
+          }
+        }} 
+      />
     </div>
   );
 }

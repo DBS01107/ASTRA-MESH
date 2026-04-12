@@ -91,7 +91,7 @@ export default function ExplainPanel({
   return (
     <div
       id="tour-explain"
-      className="glass h-full flex flex-col border-l border-indigo-500/20 flex-shrink-0 transition-all duration-300 overflow-hidden"
+      className="tour-ai glass h-full flex flex-col border-l border-indigo-500/20 flex-shrink-0 transition-all duration-300 overflow-hidden"
       style={{ width }}
     >
       {/* Tabs + collapse */}

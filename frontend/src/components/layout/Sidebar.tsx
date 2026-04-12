@@ -245,7 +245,7 @@ export default function Sidebar({ sessionId, authToken, currentUser, onLogout, o
       <Scrollable className="flex-1 px-5 py-4 space-y-5 custom-scrollbar">
 
         {/* Target */}
-        <div id="tour-target">
+        <div id="tour-target" className="tour-target">
           <label className="flex items-center gap-1.5 text-[10px] text-slate-400 uppercase tracking-widest mb-1.5">
             <Target size={11} className="text-cyan-400" /> Target
           </label>
@@ -258,7 +258,7 @@ export default function Sidebar({ sessionId, authToken, currentUser, onLogout, o
         </div>
 
         {/* Mode */}
-        <div>
+        <div className="tour-mode">
           <p className="text-[10px] text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
             <Cpu size={11} className="text-cyan-400" /> Mode
           </p>
@@ -278,7 +278,7 @@ export default function Sidebar({ sessionId, authToken, currentUser, onLogout, o
         </div>
 
         {/* Modules */}
-        <div id="tour-modules">
+        <div id="tour-modules" className="tour-modules">
           <p className="text-[10px] text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
             <Shield size={11} className="text-cyan-400" /> Modules
           </p>
