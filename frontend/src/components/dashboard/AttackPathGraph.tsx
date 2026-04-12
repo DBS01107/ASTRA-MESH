@@ -7,13 +7,11 @@ import ReactFlow, {
   useEdgesState,
   NodeMouseHandler,
 } from 'reactflow';
-import dagre from 'dagre';
 import 'reactflow/dist/style.css';
 import AssetNode from './AssetNode';
 import NodeDetailDrawer from './NodeDetailDrawer';
 
 // Map the possible object types to AssetNode so they inherit our styling & logic
-// Defined outside the component to avoid ReactFlow warning about new object on every render
 const nodeTypes = {
   asset: AssetNode,
   finding: AssetNode,
@@ -28,39 +26,6 @@ const nodeTypes = {
   custom: AssetNode
 };
 
-const dagreGraph = new dagre.graphlib.Graph();
-dagreGraph.setDefaultEdgeLabel(() => ({}));
-
-const nodeWidth = 250;
-const nodeHeight = 80;
-
-const getLayoutedElements = (nodes: any[], edges: any[], direction = 'LR') => {
-  dagreGraph.setGraph({ rankdir: direction });
-
-  nodes.forEach((node) => {
-    dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
-  });
-
-  edges.forEach((edge) => {
-    dagreGraph.setEdge(edge.source, edge.target);
-  });
-
-  dagre.layout(dagreGraph);
-
-  return nodes.map((node) => {
-    const nodeWithPosition = dagreGraph.node(node.id);
-    return {
-      ...node,
-      targetPosition: 'left',
-      sourcePosition: 'right',
-      position: {
-        x: nodeWithPosition.x - nodeWidth / 2,
-        y: nodeWithPosition.y - nodeHeight / 2,
-      },
-    };
-  });
-};
-
 interface AttackPathGraphProps {
   initialData: any;
   /** Optional callback so the graph can pre-fill the AI chat */
@@ -73,21 +38,17 @@ export default function AttackPathGraph({ initialData, onAskAI }: AttackPathGrap
   const [selectedNode, setSelectedNode] = useState<any | null>(null);
 
   useEffect(() => {
-    if (initialData && initialData.nodes && initialData.edges) {
-      const layoutedNodes = getLayoutedElements(
-        [...initialData.nodes],
-        [...initialData.edges]
-      );
-
+    if (initialData && initialData.nodes) {
       setNodes((currentNodes) => {
-        return layoutedNodes.map((node: any) => {
-          // If the user has manually dragged a node, preserve their position
+        return initialData.nodes.map((node: any, i: number) => {
+          // If the user has manually forcibly dragged a node, we preserve their coordinate overrides!
           const existingNode = currentNodes.find((n: any) => n.id === node.id);
+
           return {
             ...node,
             type: node.type || node.data?.type || 'asset',
             className: "",
-            position: existingNode ? existingNode.position : node.position,
+            position: existingNode ? existingNode.position : { x: (i % 3) * 250, y: Math.floor(i / 3) * 150 },
             data: {
               ...node.data,
               id: node.id
@@ -96,7 +57,7 @@ export default function AttackPathGraph({ initialData, onAskAI }: AttackPathGrap
         });
       });
 
-      setEdges(initialData.edges);
+      setEdges(initialData.edges || []);
     }
   }, [initialData, setNodes, setEdges]);
 
@@ -119,6 +80,7 @@ export default function AttackPathGraph({ initialData, onAskAI }: AttackPathGrap
         onNodeClick={handleNodeClick}
         onPaneClick={handlePaneClick}
         fitView
+        // Standard interaction settings for the ASTRA dashboard
         minZoom={0.2}
         maxZoom={1.5}
       >
