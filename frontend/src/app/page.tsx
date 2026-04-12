@@ -9,6 +9,7 @@ import Sidebar from "@/components/layout/Sidebar";
 import FindingsTable from "@/components/dashboard/FindingsTable";
 import Metrics from "@/components/dashboard/Metrics";
 import RiskChart from "@/components/dashboard/RiskChart";
+import RiskHeatmap from "@/components/dashboard/RiskHeatmap";
 import ActivityFeed from "@/components/dashboard/ActivityFeed";
 import { apiUrl } from "@/lib/api";
 import { authHeaders, AuthUser, clearAuthToken, getAuthToken, setAuthToken, withAuth } from "@/lib/auth";
@@ -332,16 +333,16 @@ export default function Home() {
             </>
           ) : (
             <div className="flex-1 flex flex-col gap-2 p-2 overflow-auto ps-custom">
-              {/* Dashboard Analytics View */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                <div className="glass p-4 rounded min-h-[150px]">
-                  <Metrics title="Aggregate Threat Horizon" color="#22d3ee" history={riskHistory} />
-                </div>
-                <div className="glass p-4 rounded min-h-[150px]">
+              {/* Dashboard Analytics View — Reordered: Distribution | Heatmap | Threat Horizon */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+                <div className="glass p-4 rounded min-h-[150px] md:col-span-1">
                   <RiskChart nodes={graph.nodes || []} />
                 </div>
-                <div className="glass p-4 rounded min-h-[150px]">
-                  <Metrics title="Network Anomalies" color="#f59e0b" history={riskHistory} />
+                <div className="glass p-4 rounded min-h-[150px] md:col-span-2">
+                  <RiskHeatmap nodes={graph.nodes || []} />
+                </div>
+                <div className="glass p-4 rounded min-h-[150px] md:col-span-1">
+                  <Metrics title="Aggregate Threat Horizon" color="#22d3ee" history={riskHistory} />
                 </div>
               </div>
 
