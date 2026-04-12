@@ -23,10 +23,12 @@ interface SidebarProps {
   onCollapse?: (collapsed: boolean) => void;
   width?: number;
   onSessionTerminated?: () => void;
+  onScanStart?: () => void;
+  isScanning?: boolean;
 }
 interface ScanSummary { session_id: string; target: string; status: string; finding_count: number; updated_at?: string; }
 
-export default function Sidebar({ sessionId, authToken, currentUser, onLogout, onCollapse, width = 320, onSessionTerminated }: SidebarProps) {
+export default function Sidebar({ sessionId, authToken, currentUser, onLogout, onCollapse, width = 320, onSessionTerminated, onScanStart, isScanning }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [target, setTarget] = useState("");
   const [mode, setMode] = useState("dynamic");
@@ -125,6 +127,7 @@ export default function Sidebar({ sessionId, authToken, currentUser, onLogout, o
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.detail || data.error || "Failed to initialize scan.");
+      onScanStart?.();
       toast(data.message || "Scan started.", "success");
     } catch (err: any) {
       toast(err?.message || "Failed to reach scanner backend.", "error");

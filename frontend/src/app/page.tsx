@@ -24,6 +24,8 @@ export default function Home() {
   const currentThreatRef = useRef<number>(0);
   const [logs, setLogs] = useState<string[]>([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanElapsed, setScanElapsed] = useState(0);
 
   const [authLoading, setAuthLoading] = useState(true);
   const [authToken, setAuthTokenState] = useState<string | null>(null);
@@ -98,6 +100,8 @@ export default function Home() {
     setCurrentUser(user);
     setLogs([]);
     setGraph({ nodes: [], edges: [] });
+    setIsScanning(false);
+    setScanElapsed(0);
     resetClientSessionId();
     setSessionId(getClientSessionId());
     setAuthLoading(false);
@@ -110,6 +114,8 @@ export default function Home() {
     setLogs([]);
     setGraph({ nodes: [], edges: [] });
     setSessionId(null);
+    setIsScanning(false);
+    setScanElapsed(0);
     resetClientSessionId();
     toast("Logged out successfully.", "info");
   };
@@ -117,6 +123,8 @@ export default function Home() {
   const handleSessionTerminated = () => {
     setLogs([]);
     setGraph({ nodes: [], edges: [] });
+    setIsScanning(false);
+    setScanElapsed(0);
     resetClientSessionId();
     setSessionId(getClientSessionId());
     toast("Session terminated. New session initialized.", "warning");
@@ -129,6 +137,7 @@ export default function Home() {
     es.onmessage = (e) => { if (e.data?.trim()) setLogs(p => [...p, e.data]); };
     es.addEventListener("complete", (e) => {
       setLogs(p => [...p, `[SERVER] Scan completed (${(e as MessageEvent).data || "completed"}).`]);
+      setIsScanning(false);
       toast("Scan completed successfully.", "success");
     });
     es.onerror = (err) => { if (es.readyState !== EventSource.CLOSED) console.error("SSE Error:", err); };
@@ -195,6 +204,20 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
+  // Real-time Scan Stopwatch
+  useEffect(() => {
+    if (!isScanning) return;
+    const interval = setInterval(() => {
+      setScanElapsed(prev => prev + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isScanning]);
+
+  const handleScanStart = useCallback(() => {
+    setScanElapsed(0);
+    setIsScanning(true);
+  }, []);
+
 
   if (authLoading) {
     return (
@@ -225,6 +248,8 @@ export default function Home() {
           onLogout={handleLogout}
           onCollapse={setSidebarCollapsed}
           onSessionTerminated={handleSessionTerminated}
+          onScanStart={handleScanStart}
+          isScanning={isScanning}
         />
       </ResizablePane>
 
@@ -271,7 +296,12 @@ export default function Home() {
                 }`}
                 style={{ height: terminalCollapsed ? 'auto' : `${graphPct}%` }}
               >
-                <AttackPathGraph initialData={graph} onAskAI={handleAskAI} />
+                <AttackPathGraph 
+                  initialData={graph} 
+                  onAskAI={handleAskAI} 
+                  isScanning={isScanning}
+                  scanElapsed={scanElapsed}
+                />
               </div>
 
               {/* Vertical resize handle — hidden when terminal is collapsed */}
