@@ -20,7 +20,7 @@ import { useToast } from "@/components/ui/Toast";
 export default function Home() {
   const { toast } = useToast();
   const [graph, setGraph] = useState<any>({ nodes: [], edges: [] });
-  const [riskHistory, setRiskHistory] = useState<{time: string, threat: number}[]>([]);
+  const [riskHistory, setRiskHistory] = useState<{ time: string, threat: number }[]>([]);
   const currentThreatRef = useRef<number>(0);
   const [logs, setLogs] = useState<string[]>([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -153,7 +153,7 @@ export default function Home() {
   // Compute total dynamic threat score organically whenever the graph data changes
   useEffect(() => {
     if (!graph?.nodes) return;
-    
+
     let currentThreat = 0;
     graph.nodes.forEach((n: any) => {
       if (n.type === 'vulnerability' || n.type === 'finding' || n.data?.cvss || n.data?.severity) {
@@ -165,7 +165,7 @@ export default function Home() {
           else if (cvss >= 4.0) risk = 'MEDIUM';
           else risk = 'LOW';
         }
-        
+
         const r = risk.toUpperCase();
         if (r === 'CRITICAL') currentThreat += 100;
         if (r === 'HIGH') currentThreat += 75;
@@ -186,7 +186,7 @@ export default function Home() {
     const interval = setInterval(() => {
       const now = new Date();
       const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-      
+
       setRiskHistory(prev => {
         const next = [...prev, { time: timeStr, threat: currentThreatRef.current }];
         return next.slice(-30); // Keep last 30 seconds of rolling history
@@ -263,13 +263,13 @@ export default function Home() {
         <div className="flex-1 flex flex-col gap-2 overflow-hidden min-h-0">
           {viewMode === "graph" ? (
             <>
-              {/* Attack graph — flex-1 when terminal is collapsed, fixed % when expanded */}
+              {/* Attack graph — switches to flex-1 (expanding downwards) when terminal is collapsed */}
               <div
                 id="tour-graph"
                 className={`glass relative overflow-hidden bg-black/40 scanline transition-all duration-300 ${
                   terminalCollapsed ? "flex-1 min-h-0" : "flex-shrink-0"
                 }`}
-                style={terminalCollapsed ? undefined : { height: `${graphPct}%` }}
+                style={{ height: terminalCollapsed ? 'auto' : `${graphPct}%` }}
               >
                 <AttackPathGraph initialData={graph} onAskAI={handleAskAI} />
               </div>
@@ -286,12 +286,19 @@ export default function Home() {
                 </div>
               )}
 
-              {/* Terminal — controlled collapse lifted to page level */}
-              <ScanTerminal
-                logs={logs}
-                isCollapsed={terminalCollapsed}
-                onCollapse={setTerminalCollapsed}
-              />
+              {/* Terminal — container shrinks to h-10 when collapsed */}
+              <div 
+                id="tour-terminal" 
+                className={`overflow-hidden transition-all duration-300 ${
+                  terminalCollapsed ? "h-10" : "flex-1 min-h-0"
+                }`}
+              >
+                <ScanTerminal 
+                  logs={logs} 
+                  isCollapsed={terminalCollapsed} 
+                  onCollapse={setTerminalCollapsed} 
+                />
+              </div>
             </>
           ) : (
             <div className="flex-1 flex flex-col gap-2 p-2 overflow-auto ps-custom">

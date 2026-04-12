@@ -34,14 +34,7 @@ export default function ScanTerminal({ logs, isCollapsed, onCollapse }: ScanTerm
   }, [logs, isCollapsed]);
 
   return (
-    // When collapsed: flex-shrink-0 h-10 (just the header bar, graph fills rest)
-    // When expanded:  flex-1 min-h-0 (takes remaining space below graph)
-    <div
-      id="tour-terminal"
-      className={`glass flex flex-col overflow-hidden transition-all duration-300 ${
-        isCollapsed ? "flex-shrink-0 h-10" : "flex-1 min-h-0"
-      }`}
-    >
+    <div className={`glass flex flex-col h-full overflow-hidden`}>
       {/* Header — always visible, click to toggle */}
       <button
         onClick={() => onCollapse(!isCollapsed)}
@@ -62,7 +55,7 @@ export default function ScanTerminal({ logs, isCollapsed, onCollapse }: ScanTerm
         }
       </button>
 
-      {/* Log body */}
+      {/* Log body — hidden when collapsed */}
       {!isCollapsed && (
         <Scrollable
           containerRef={terminalRef}
