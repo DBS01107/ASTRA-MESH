@@ -8,6 +8,7 @@ import {
   BarChart2, Download, LogOut, User, Layers, Square, Power
 } from "lucide-react";
 import Scrollable from "@/components/ui/Scrollable";
+import { useToast } from "@/components/ui/Toast";
 
 interface Scanner { name: string; enabled: boolean; }
 interface CheckCoverageSummary { total: number; detected: number; covered: number; uncovered: number; }
@@ -33,7 +34,6 @@ export default function Sidebar({ sessionId, authToken, currentUser, onLogout, o
   const [stopLoading, setStopLoading] = useState(false);
   const [terminateLoading, setTerminateLoading] = useState(false);
   const [reportLoading, setReportLoading] = useState(false);
-  const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [scanners, setScanners] = useState<Scanner[]>([]);
   const [selectedScanners, setSelectedScanners] = useState<Set<string>>(new Set());
   const [checkCoverage, setCheckCoverage] = useState<CheckCoverageResponse | null>(null);
@@ -45,6 +45,8 @@ export default function Sidebar({ sessionId, authToken, currentUser, onLogout, o
     setCollapsed(next);
     onCollapse?.(next);
   };
+
+  const { toast } = useToast();
 
   useEffect(() => {
     fetch(apiUrl("/api/scanners"), { headers: authHeaders(authToken) })
@@ -104,8 +106,9 @@ export default function Sidebar({ sessionId, authToken, currentUser, onLogout, o
       a.href = url; a.download = match?.[1] || "astra-report.pdf";
       document.body.appendChild(a); a.click(); a.remove();
       window.URL.revokeObjectURL(url);
+      toast("Report downloaded successfully.", "success");
     } catch (err: any) {
-      alert(err?.message || "Unable to download PDF report.");
+      toast(err?.message || "Unable to download PDF report.", "error");
     } finally {
       setReportLoading(false);
     }
@@ -114,7 +117,6 @@ export default function Sidebar({ sessionId, authToken, currentUser, onLogout, o
   const handleRun = async () => {
     if (!target || !sessionId) return;
     setLoading(true);
-    setActionMessage(null);
     try {
       const res = await fetch(apiUrl("/api/scan"), {
         method: "POST",
@@ -123,9 +125,9 @@ export default function Sidebar({ sessionId, authToken, currentUser, onLogout, o
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.detail || data.error || "Failed to initialize scan.");
-      setActionMessage(data.message || "Scan started.");
+      toast(data.message || "Scan started.", "success");
     } catch (err: any) {
-      setActionMessage(err?.message || "Failed to reach scanner backend.");
+      toast(err?.message || "Failed to reach scanner backend.", "error");
     } finally {
       setLoading(false);
     }
@@ -134,7 +136,6 @@ export default function Sidebar({ sessionId, authToken, currentUser, onLogout, o
   const handleStopScan = async () => {
     if (!sessionId || !authToken || stopLoading) return;
     setStopLoading(true);
-    setActionMessage(null);
     try {
       const res = await fetch(apiUrl(withSession("/api/scan/stop", sessionId)), {
         method: "POST",
@@ -142,9 +143,9 @@ export default function Sidebar({ sessionId, authToken, currentUser, onLogout, o
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.detail || data.message || "Unable to stop scan.");
-      setActionMessage(data.message || "Scan stop requested.");
+      toast(data.message || "Scan stop requested.", "warning");
     } catch (err: any) {
-      setActionMessage(err?.message || "Unable to stop scan.");
+      toast(err?.message || "Unable to stop scan.", "error");
     } finally {
       setStopLoading(false);
     }
@@ -156,7 +157,6 @@ export default function Sidebar({ sessionId, authToken, currentUser, onLogout, o
     if (!confirmed) return;
 
     setTerminateLoading(true);
-    setActionMessage(null);
     try {
       const res = await fetch(apiUrl(withSession("/api/session", sessionId)), {
         method: "DELETE",
@@ -167,10 +167,10 @@ export default function Sidebar({ sessionId, authToken, currentUser, onLogout, o
       setTarget("");
       setCheckCoverage(null);
       setRecentScans(prev => prev.filter(scan => scan.session_id !== sessionId));
-      setActionMessage(data.message || "Session terminated.");
+      toast(data.message || "Session terminated.", "warning");
       onSessionTerminated?.();
     } catch (err: any) {
-      setActionMessage(err?.message || "Unable to terminate session.");
+      toast(err?.message || "Unable to terminate session.", "error");
     } finally {
       setTerminateLoading(false);
     }
@@ -363,11 +363,6 @@ export default function Sidebar({ sessionId, authToken, currentUser, onLogout, o
 
       {/* Footer actions */}
       <div id="tour-actions" className="px-5 py-4 space-y-2 border-t border-indigo-500/15 flex-shrink-0">
-        {actionMessage && (
-          <div className="text-[9px] rounded border border-indigo-500/25 bg-indigo-500/10 px-2 py-1 text-cyan-300/90">
-            {actionMessage}
-          </div>
-        )}
         <button
           onClick={handleRun}
           disabled={loading || !sessionId || !target || selectedScanners.size === 0 || !authToken}

@@ -1,6 +1,6 @@
 "use client";
-import React, { useState } from 'react';
-import { Send, Terminal, Loader2, Bot } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Send, Loader2, Bot } from 'lucide-react';
 import Scrollable from "@/components/ui/Scrollable";
 import { apiUrl } from "@/lib/api";
 import { authHeaders } from "@/lib/auth";
@@ -9,10 +9,14 @@ interface AIChatProps {
     logs: string[];
     sessionId: string;
     authToken: string;
+    /** Pre-filled message arriving from graph node "Ask AI" click */
+    pendingMessage?: string | null;
+    onPendingMessageConsumed?: () => void;
 }
 
-export default function AIChat({ logs = [], sessionId, authToken }: AIChatProps) {
+export default function AIChat({ logs = [], sessionId, authToken, pendingMessage, onPendingMessageConsumed }: AIChatProps) {
     const chatRef = React.useRef<HTMLDivElement>(null);
+    const inputRef = React.useRef<HTMLInputElement>(null);
     const [messages, setMessages] = useState<{ role: 'user' | 'assistant', content: string }[]>([
         { role: 'assistant', content: "I'm monitoring the scan logs. Ask me anything about the findings." }
     ]);
@@ -24,6 +28,16 @@ export default function AIChat({ logs = [], sessionId, authToken }: AIChatProps)
             chatRef.current.scrollTop = chatRef.current.scrollHeight;
         }
     }, [messages]);
+
+    // Accept pending message from graph node click — pre-fill and auto-send
+    useEffect(() => {
+        if (pendingMessage) {
+            setInput(pendingMessage);
+            onPendingMessageConsumed?.();
+            // Focus the input so the user can review before sending
+            setTimeout(() => inputRef.current?.focus(), 100);
+        }
+    }, [pendingMessage, onPendingMessageConsumed]);
 
     const handleSend = async () => {
         if (!input.trim() || loading) return;
@@ -42,7 +56,7 @@ export default function AIChat({ logs = [], sessionId, authToken }: AIChatProps)
                 },
                 body: JSON.stringify({
                     question: userMsg,
-                    logs: logs.slice(-50), // Send last 50 logs for context
+                    logs: logs.slice(-50),
                     session_id: sessionId
                 })
             });
@@ -52,7 +66,7 @@ export default function AIChat({ logs = [], sessionId, authToken }: AIChatProps)
                 role: 'assistant',
                 content: data.answer || "I couldn't analyze that properly."
             }]);
-        } catch (err) {
+        } catch {
             setMessages(prev => [...prev, {
                 role: 'assistant',
                 content: "Error connecting to AI Reasoning Engine."
@@ -65,7 +79,7 @@ export default function AIChat({ logs = [], sessionId, authToken }: AIChatProps)
     return (
         <div className="flex flex-col h-[calc(100vh-12rem)] max-h-[500px]">
             {/* Messages Area */}
-            <Scrollable 
+            <Scrollable
                 containerRef={chatRef}
                 className="flex-1 space-y-3 p-2 font-mono text-xs"
             >
@@ -91,11 +105,12 @@ export default function AIChat({ logs = [], sessionId, authToken }: AIChatProps)
             {/* Input Area */}
             <div className="mt-2 flex gap-2 border-t border-white/10 pt-2">
                 <input
+                    ref={inputRef}
                     type="text"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                    placeholder="Ask about open ports..."
+                    placeholder="Ask about open ports, CVEs, findings..."
                     className="flex-1 bg-black/40 border border-white/10 px-3 py-2 text-xs text-white focus:outline-none focus:border-[#22d3ee] font-mono"
                 />
                 <button

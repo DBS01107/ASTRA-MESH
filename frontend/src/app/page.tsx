@@ -13,11 +13,12 @@ import ActivityFeed from "@/components/dashboard/ActivityFeed";
 import { apiUrl } from "@/lib/api";
 import { authHeaders, AuthUser, clearAuthToken, getAuthToken, setAuthToken, withAuth } from "@/lib/auth";
 import { getClientSessionId, resetClientSessionId, withSession } from "@/lib/session";
-
 import ResizablePane from "@/components/ui/ResizablePane";
 import TourGuide from "@/components/dashboard/TourGuide";
+import { useToast } from "@/components/ui/Toast";
 
 export default function Home() {
+  const { toast } = useToast();
   const [graph, setGraph] = useState<any>({ nodes: [], edges: [] });
   const [riskHistory, setRiskHistory] = useState<{time: string, threat: number}[]>([]);
   const currentThreatRef = useRef<number>(0);
@@ -31,6 +32,10 @@ export default function Home() {
   const [viewMode, setViewMode] = useState<"graph" | "dashboard">("graph");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [explainCollapsed, setExplainCollapsed] = useState(false);
+
+  // AI pre-fill from graph node → chat
+  const [pendingAIMessage, setPendingAIMessage] = useState<string | null>(null);
+  const handleAskAI = useCallback((ctx: string) => setPendingAIMessage(ctx), []);
 
   // Vertical split between graph and terminal (percentage 0-100)
   const [graphPct, setGraphPct] = useState(65);
@@ -105,6 +110,7 @@ export default function Home() {
     setGraph({ nodes: [], edges: [] });
     setSessionId(null);
     resetClientSessionId();
+    toast("Logged out successfully.", "info");
   };
 
   const handleSessionTerminated = () => {
@@ -112,6 +118,7 @@ export default function Home() {
     setGraph({ nodes: [], edges: [] });
     resetClientSessionId();
     setSessionId(getClientSessionId());
+    toast("Session terminated. New session initialized.", "warning");
   };
 
   useEffect(() => {
@@ -121,6 +128,7 @@ export default function Home() {
     es.onmessage = (e) => { if (e.data?.trim()) setLogs(p => [...p, e.data]); };
     es.addEventListener("complete", (e) => {
       setLogs(p => [...p, `[SERVER] Scan completed (${(e as MessageEvent).data || "completed"}).`]);
+      toast("Scan completed successfully.", "success");
     });
     es.onerror = (err) => { if (es.readyState !== EventSource.CLOSED) console.error("SSE Error:", err); };
     return () => es.close();
@@ -260,7 +268,7 @@ export default function Home() {
                 className="glass relative overflow-hidden bg-black/40 scanline flex-shrink-0"
                 style={{ height: `${graphPct}%` }}
               >
-                <AttackPathGraph initialData={graph} />
+                <AttackPathGraph initialData={graph} onAskAI={handleAskAI} />
               </div>
 
               {/* Vertical resize handle */}
@@ -319,6 +327,8 @@ export default function Home() {
           sessionId={sessionId}
           authToken={authToken}
           onCollapse={setExplainCollapsed}
+          pendingAIMessage={pendingAIMessage}
+          onPendingAIMessageConsumed={() => setPendingAIMessage(null)}
         />
       </ResizablePane>
 

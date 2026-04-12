@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Brain, MessageSquare, ChevronRight, ChevronLeft } from "lucide-react";
 import AIChat from "./AIChat";
 import Scrollable from "@/components/ui/Scrollable";
+import ReactMarkdown from "react-markdown";
 import { apiUrl } from "@/lib/api";
 import { authHeaders } from "@/lib/auth";
 import { withSession } from "@/lib/session";
@@ -13,9 +14,20 @@ interface ExplainPanelProps {
   authToken: string;
   onCollapse?: (collapsed: boolean) => void;
   width?: number;
+  /** Pre-fill message from graph node click */
+  pendingAIMessage?: string | null;
+  onPendingAIMessageConsumed?: () => void;
 }
 
-export default function ExplainPanel({ logs, sessionId, authToken, onCollapse, width = 320 }: ExplainPanelProps) {
+export default function ExplainPanel({
+  logs,
+  sessionId,
+  authToken,
+  onCollapse,
+  width = 320,
+  pendingAIMessage,
+  onPendingAIMessageConsumed,
+}: ExplainPanelProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState<"reasoning" | "chat">("reasoning");
   const [reasoning, setReasoning] = useState("Waiting for active scan analysis...");
@@ -39,6 +51,15 @@ export default function ExplainPanel({ logs, sessionId, authToken, onCollapse, w
     const iv = setInterval(fetch_, 3000);
     return () => clearInterval(iv);
   }, [sessionId, authToken]);
+
+  // When a pending AI message arrives from node click — switch to chat tab + expand
+  useEffect(() => {
+    if (pendingAIMessage) {
+      setCollapsed(false);
+      onCollapse?.(false);
+      setActiveTab("chat");
+    }
+  }, [pendingAIMessage, onCollapse]);
 
   /* ── Collapsed rail ── */
   if (collapsed) {
@@ -104,15 +125,34 @@ export default function ExplainPanel({ logs, sessionId, authToken, onCollapse, w
       <div className="flex-1 overflow-auto p-4">
         {activeTab === "reasoning" ? (
           <div className="h-full flex flex-col gap-3">
-            <Scrollable className="flex-1 bg-slate-900/50 rounded border border-indigo-500/15 p-4 text-xs text-slate-300 leading-relaxed font-mono">
-              {reasoning}
+            <Scrollable className="flex-1 bg-slate-900/50 rounded border border-indigo-500/15 p-4 text-xs text-slate-300 leading-relaxed">
+              {/* Render markdown from AI reasoning */}
+              <div className="prose prose-invert prose-xs max-w-none
+                prose-headings:text-cyan-300 prose-headings:font-bold prose-headings:tracking-wide
+                prose-h1:text-sm prose-h2:text-xs prose-h3:text-xs
+                prose-strong:text-slate-100
+                prose-code:text-violet-300 prose-code:bg-violet-500/10 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-[10px]
+                prose-pre:bg-black/40 prose-pre:border prose-pre:border-white/10 prose-pre:text-[10px]
+                prose-ul:text-slate-300 prose-li:text-slate-300
+                prose-a:text-cyan-400 prose-a:underline
+                prose-blockquote:border-indigo-500/40 prose-blockquote:text-slate-400
+                [&>*]:font-mono
+              ">
+                <ReactMarkdown>{reasoning}</ReactMarkdown>
+              </div>
             </Scrollable>
             <button className="w-full py-2.5 rounded bg-cyan-500/15 border border-cyan-400/50 text-cyan-300 text-[10px] font-bold uppercase tracking-widest hover:bg-cyan-400/25 transition-all flex-shrink-0">
               Execute Remediation
             </button>
           </div>
         ) : (
-          <AIChat logs={logs} sessionId={sessionId} authToken={authToken} />
+          <AIChat
+            logs={logs}
+            sessionId={sessionId}
+            authToken={authToken}
+            pendingMessage={pendingAIMessage}
+            onPendingMessageConsumed={onPendingAIMessageConsumed}
+          />
         )}
       </div>
     </div>
